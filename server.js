@@ -253,7 +253,7 @@ const RESTARTER="const {execFileSync,spawn}=require('child_process');const o=JSO
   "let n=0;const t=setInterval(()=>{if(!alive()){clearInterval(t);setTimeout(()=>{spawn(o.exe,o.args,{cwd:o.cwd,detached:true,stdio:'ignore'}).unref();setTimeout(()=>process.exit(0),500)},3000)}"+
   "else if(++n>180){clearInterval(t);process.exit(0)}},1000);";
 function restartObs(ver){
-  const ps='Get-CimInstance Win32_Process | Where-Object { $_.Name -match "^obs(64|32)?\\.exe$" } | Select-Object -First 1 ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress';
+  const ps='[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process | Where-Object { $_.Name -match "^obs(64|32)?\\.exe$" } | Select-Object -First 1 ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress';
   execFile('powershell',['-NoProfile','-NonInteractive','-Command',ps],{windowsHide:true},(e,out)=>{
     let o=null;try{o=JSON.parse(out)}catch(x){}
     if(!o||!o.ExecutablePath){stage('done','Версия '+ver+' установлена. Перезапусти OBS, чтобы она заработала');return}

@@ -25,5 +25,5 @@ extra = ""
 On Error Resume Next
 sh.Run cmd & " server.js --auto" & extra, 0, False
 If Err.Number <> 0 Then
-  MsgBox "node.exe not found. Open start-server.vbs in Notepad and set nodeExe to the full path of node.exe. To find it, run in PowerShell: (Get-Command node).Source", 16, "start-server"
+  MsgBox "node.exe not found. Open start-server.vbs in Notepad and set nodeExe to the full path of node.exe. To find it, run in PowerShell: (Get-Command node).Source" & vbCrLf & vbCrLf & "If the path has non-English letters, save the file with encoding ANSI (not UTF-8).", 16, "start-server"
 End If
