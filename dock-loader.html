@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Плеер</title>
+<style>
+  html,body{height:100%;margin:0;background:#111;color:#aaa;font:14px sans-serif}
+  body{display:flex;align-items:center;justify-content:center;text-align:center}
+</style>
+</head>
+<body>
+<div>Ожидание сервера…</div>
+<script>
+  var URL_PLAYER = 'http://localhost:8000/redeem-player.html';
+  (function wait() {
+    fetch(URL_PLAYER, { mode: 'no-cors', cache: 'no-store' }).then(
+      function () { location.replace(URL_PLAYER); },
+      function () { setTimeout(wait, 500); }
+    );
+  })();
+</script>
+</body>
+</html>

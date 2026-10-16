@@ -23,6 +23,9 @@ svg{width:20px;height:20px;display:block;flex:none}
 #tabs button:last-child{flex:none;width:44px}
 #tabs button.on{background:var(--fg);color:var(--ink)}
 #tabs svg{width:18px;height:18px}
+#tabs button{position:relative}
+#tabs .upd{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--warn);color:var(--ink);display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);animation:pop .5s var(--ease)}
+#tabs .upd svg{width:11px;height:11px;stroke-width:3}
 @media(max-width:340px){#tabs span{display:none}#tabs button:last-child{flex:1;width:auto}}
 main{flex:1;overflow-y:auto;min-height:0;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:#333 transparent}
 section{display:none;flex-direction:column;gap:8px}
@@ -242,7 +245,7 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
 </style></head><body>
 <div id="panel">
   <div id="hd"><b>Bzden4ik</b><span id="hp" class="pill bad">плеер</span><span id="ht" class="pill bad">twitch</span></div>
-  <nav id="tabs"><button data-t="now" class="on"><i data-i="note"></i><span>Сейчас</span></button><button data-t="hist"><i data-i="clock"></i><span>История</span></button><button data-t="pl"><i data-i="list"></i><span>Плейлисты</span></button><button data-t="set" title="Настройки" aria-label="Настройки"><i data-i="gear"></i></button></nav>
+  <nav id="tabs"><button data-t="now" class="on"><i data-i="note"></i><span>Сейчас</span></button><button data-t="hist"><i data-i="clock"></i><span>История</span></button><button data-t="pl"><i data-i="list"></i><span>Плейлисты</span></button><button data-t="set" title="Настройки" aria-label="Настройки"><i data-i="gear"></i><b class="upd" id="updb" hidden><i data-i="dl"></i></b></button></nav>
   <main>
   <section id="s-now" class="on">
     <div class="lr ord" id="ord"><div class="lt"><b>Заказы за баллы</b><i id="ords">Twitch не подключён</i></div><input type="checkbox" class="tg" id="ordt" disabled><label class="sw" for="ordt" title="Показать или скрыть награду для заказов на Twitch"></label></div>
@@ -287,7 +290,7 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <div class="warn" id="twrw"></div>
       <div class="mk" id="rwf" hidden><input id="rwt" maxlength="45" value="Заказать трек" aria-label="Название награды"><label class="fld"><input id="rwc" inputmode="numeric" value="300" aria-label="Цена в баллах"><i>баллов</i></label><button id="rwb" class="w">Создать награду</button></div>
       <label class="fi"><span>Награда — часть названия, пусто значит любая</span><input id="flt" placeholder="например: видео"></label>
-      <label class="lim"><input type="checkbox" class="tg" id="chat_on"><span class="sw sm"></span>писать зрителю в чат, почему заказ не принят</label>
+      <div class="lr"><input type="checkbox" class="tg" id="chat_on"><label class="sw" for="chat_on"></label><label class="lt" for="chat_on"><b>Сообщения в чат</b><i>от твоего имени: почему заказ не принят и что баллы вернулись. Выключено — панель в чат не пишет и не просит у Twitch на это права</i></label></div>
       <div class="bar"><button id="conn" class="w">Подключить</button><button id="rel" class="gh" title="Войти в Twitch заново с нужными правами: возврат баллов, сообщения в чат, проверка слов">Обновить</button><button id="lout" class="gh" title="Выйти из аккаунта Twitch — потом можно войти в другой" hidden>Выйти</button></div>
       <details><summary>Client ID и токен</summary>
         <div class="row"><label>Client ID</label><input id="cid" autocomplete="off"></div>
@@ -417,7 +420,7 @@ if(view&&ME){
   let yt=null,ready=false,q=[],cur=null,paused=false,ap=null,pn=0;
   const box=$('box');
   const st=()=>{box.classList.toggle('pz',!!(paused&&cur));let title='',tm=0,du=0;try{if(cur&&ready){title=(yt.getVideoData()||{}).title||'';tm=Math.floor(yt.getCurrentTime()||0);du=Math.floor(yt.getDuration()||0)}}catch(e){}
-    send({t:'st',pa:paused?1:0,cur:cur?cur.id:null,ck:cur?cur.k:null,q:q.length,
+    send({t:'st',yt:ready?1:0,pa:paused?1:0,cur:cur?cur.id:null,ck:cur?cur.k:null,q:q.length,
       ql:q.map(x=>x.pl?{pl:1,k:x.k,name:x.name,n:x.items.length}:{id:x.id,u:x.u,k:x.k}),
       ap:ap?{k:ap.k,name:ap.name,pos:ap.pos,n:ap.items.length}:null,pk:cur&&cur.pk||null,cu:cur&&cur.u||'',ct:cur&&cur.t||'',title,tm,du,cut:cur&&cur.cut||0})};
   function pick(){
@@ -510,7 +513,8 @@ if(view&&ME){
     mute:'M11 5L6 9H3v6h3l5 4zM22 9l-6 6M16 9l6 6',
     minus:'M5 12h14',
     inc:'M12 5v14M5 12h14',
-    ext:'M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6'
+    ext:'M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6',
+    dl:'M12 4v11M7 10l5 5 5-5M5 20h14'
   };
   const ico=(n,f)=>'<svg viewBox="0 0 24 24" fill="'+(f?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
   document.querySelectorAll('i[data-i]').forEach(i=>i.innerHTML=ico(i.dataset.i));
@@ -659,14 +663,16 @@ if(view&&ME){
   }
   let now={id:null,k:null,t:'',u:'',pk:null},ql=[],apl=null,pa=false,paT=0;
   let pos={tm:0,at:0,du:0,cut:0};
+  let ytNo=0;const ytBad=()=>!!ytNo&&Date.now()-ytNo>20000;
+  const YTBAD='Плеер в OBS не может открыть YouTube: youtube.com из OBS недоступен. Нужен VPN, через который идёт OBS. Если в VPN есть исключения по программам, убери оттуда obs-browser-page.exe';
   const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e};
   function renderNow(){
     const np=$('np'),has=!!now.id;
     np.classList.toggle('idle',!has);np.classList.toggle('pz',pa&&has);
     $('ntag').textContent=pa?'пауза':'играет';
-    $('nt').textContent=has?(now.t||TT[now.id]||'Загрузка названия…'):'Ничего не играет';
+    $('nt').textContent=has?(now.t||TT[now.id]||'Загрузка названия…'):ytBad()?'YouTube не загружается':'Ничего не играет';
     const nu=$('nu');nu.textContent='';
-    if(!has)nu.textContent='Заказы с Twitch и плейлисты появятся здесь';
+    if(!has)nu.textContent=ytBad()?YTBAD:'Заказы с Twitch и плейлисты появятся здесь';
     else if(now.pk)nu.textContent=now.u;
     else if(now.u){const b=el('b');b.textContent=now.u;nu.append('заказал ',b)}
     const na=$('na');na.innerHTML='';
@@ -835,12 +841,14 @@ if(view&&ME){
     fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({url:u})}).then(r=>{if(!r.ok)throw 0;toast('Открываю в браузере')}).catch(()=>window.open(u,'_blank'));
   }
   $('tgk').onclick=()=>openUrl('https://t.me/vtuberstand');
-  const UPB=['download','extract','install','restart'];let app=null,apT=0,apArm=0;
+  const UPB=['download','extract','install','restart'];let app=null,apT=0,apArm=0,updShown='';
   async function appPoll(){
     try{app=await yget('/app')}catch(e){app=null}
     appUI();clearTimeout(apT);apT=setTimeout(appPoll,app&&UPB.includes(app.stage)?1000:60000);
   }
   function appUI(){
+    const nb=!!(app&&!app.edition&&app.newer&&app.latest&&!UPB.includes(app.stage)&&app.stage!=='done'),gb=document.querySelector('#tabs button[data-t="set"]');
+    $('updb').hidden=!nb;gb.title=nb?'Настройки · доступна версия '+app.latest.version:'Настройки';gb.setAttribute('aria-label',gb.title);
     const s=$('aps'),v=$('apv'),u=$('apu'),g=$('apg'),c=$('apc'),st=(t,k)=>{s.textContent=t;s.className='stat '+(k||'');s.hidden=!t},say=t=>{u.textContent=t;u.hidden=!t};
     if(!app){st('нет связи','bad');v.textContent='Сервер не ответил';say('');g.hidden=c.hidden=true;return}
     $('apn').textContent=app.name;
@@ -876,11 +884,12 @@ if(view&&ME){
     document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
     document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
     document.querySelector('main').scrollTop=0;renderAll();
+    if(t==='set'&&!$('updb').hidden&&app&&updShown!==app.latest.version){updShown=app.latest.version;$('apn').closest('.card').scrollIntoView({block:'start'})}
   }
   document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   ['cid','tok','flt','yk'].forEach(k=>{const el=$(k);el.value=C[k];el.oninput=()=>{C[k]=el.value.trim();saveC()}});
   ['v_on','l_on','d_on','b_on','q_on','chat_on','w_on','w_hate','w_am','w_tw','w_txt','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
-    el.onchange=()=>{C[k]=el.checked;saveC();if(k==='ord_auto')twSync();if(k[0]==='w'){wcomp=null;wInfo();if(k==='w_tw'&&C.w_tw&&uid)blocked()}}});
+    el.onchange=()=>{C[k]=el.checked;saveC();if(k==='ord_auto')twSync();if(k==='chat_on')scopeUI();if(k[0]==='w'){wcomp=null;wInfo();if(k==='w_tw'&&C.w_tw&&uid)blocked()}}});
   $('w_my').value=C.w_my;$('w_my').oninput=()=>{C.w_my=$('w_my').value;saveC();wcomp=null;wInfo()};
   $('rwb').onclick=mkReward;
   const NF={v_n:{step:1000,min:0},l_n:{step:100,min:0},d_n:{step:.5,min:.5,dec:1},pl_pct:{step:5,min:50,max:100}};
@@ -961,11 +970,18 @@ if(view&&ME){
   $('pl').onkeydown=e=>{if(e.key==='Enter')$('pa').click()};
   $('dcp').onclick=()=>copy($('dp').textContent+'\n'+[...lg.children].map(x=>x.textContent).join('\n'),'Отладка скопирована');
   $('dcl').onclick=()=>{lg.innerHTML='';toast('Лог очищен')};
-  $('rel').onclick=()=>{C.tok='';$('tok').value='';saveC();login()};
+  $('rel').onclick=async()=>{
+    const old=C.tok;C.tok='';$('tok').value='';saveC();
+    if(old)await Promise.race([fetch('https://id.twitch.tv/oauth2/revoke',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'client_id='+encodeURIComponent(C.cid)+'&token='+encodeURIComponent(old)}).catch(()=>{}),new Promise(r=>setTimeout(r,3000))]);
+    login()};
   if(qe)log('Twitch: '+qe);
   let last=0,sig='';
   onmsg=m=>{
-    if(m.t==='st'){last=Date.now();setInfo('на связи · в очереди '+m.q,true);showNow(m);if(!stSeen){stSeen=true;setTimeout(tryRec,800)}}
+    if(m.t==='st'){const gap=Date.now()-last;last=Date.now();
+      if(m.yt===0){if(!ytNo||gap>10000)ytNo=Date.now()}else ytNo=0;
+      const yb=ytBad();setInfo(yb?'на связи, но YouTube в плеере не загружается':'на связи · в очереди '+m.q,!yb);
+      showNow(m);if(!stSeen){stSeen=true;setTimeout(tryRec,800)}}
     else if(m.t==='done'&&m.k)prg[m.k]=1;
     else if(m.t==='err'){
       const why=PERR[m.code]||'ошибка YouTube (код '+m.code+')',e=m.k&&hget(m.k);
@@ -993,7 +1009,7 @@ if(view&&ME){
     DB2.hist.forEach(e=>{if(e.s==='queued'&&e.qa&&e.ts>=T0&&Date.now()-e.qa>15000&&!isLive(e.k))lose(e,0,'пропал из очереди: плеер перезапустился')});
     if(Date.now()-paT>2500)pa=!!m.pa;
     if(fresh||Date.now()-skT>2000)pos={tm:m.tm||0,at:Date.now(),du:m.du||0,cut:m.cut||0};else pos={...pos,du:m.du||pos.du,cut:m.cut||0};
-    const s=JSON.stringify([m.cur,m.ck,now.t,pa,ql.map(x=>x.k),apl&&[apl.k,apl.pos]]);
+    const s=JSON.stringify([m.cur,m.ck,now.t,pa,ql.map(x=>x.k),apl&&[apl.k,apl.pos],ytBad()]);
     if(s!==sig){sig=s;renderNow();renderQ()}else if(scrub===null)prog();
   }
   const fmtN=n=>Math.round(n).toLocaleString('ru-RU');
@@ -1172,11 +1188,20 @@ if(view&&ME){
   }
   function note(e,msg){if(e&&e.rid)chat('@'+(e.ul||e.u)+', '+msg+'. Баллы возвращены.',e.ul||e.u)}
   $('tp').onclick=()=>{const v=$('tl').value,id=yid(v);if(!id){toast(linkWhy(v));return}order(id,'тест',!$('tv').checked);$('tl').value=''};
-  const SCOPES=['channel:manage:redemptions','user:write:chat','moderation:read','moderator:read:blocked_terms'];
+  const scopes=()=>['channel:manage:redemptions',...(C.chat_on?['user:write:chat']:[]),'moderation:read','moderator:read:blocked_terms'];
+  const SCN={'channel:manage:redemptions':'управлять наградой и возвращать баллы','user:write:chat':'писать в чат','moderation:read':'проверять текст через AutoMod','moderator:read:blocked_terms':'читать запрещённые слова канала'};
+  let twSc=null;
+  function scopeUI(){
+    const sc=twSc||String(C.sc||'').split(/[ +]/),miss=scopes().filter(s=>!sc.includes(s)),extra=!C.chat_on&&sc.includes('user:write:chat'),w=$('twm');
+    w.hidden=!(C.tok&&(miss.length||extra));
+    w.textContent=miss.length?'Нужны новые права Twitch: '+miss.map(s=>SCN[s]||s).join(', ')+'. Нажми «Обновить».'
+      :'Сообщения в чат выключены, но у входа в Twitch ещё есть право писать в чат. Нажми «Обновить» — вход станет без этого права.';
+    $('rel').className=!w.hidden?'w':'gh';
+  }
   const login=()=>{
     const a=new Uint8Array(16);crypto.getRandomValues(a);const s=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
     try{localStorage.setItem('ytq-state',JSON.stringify({s,at:Date.now()}))}catch(e){}
-    location.href='https://id.twitch.tv/oauth2/authorize?client_id='+encodeURIComponent(C.cid)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(SCOPES.join(' '))+'&state='+s+(C.relog?'&force_verify=true':'')};
+    location.href='https://id.twitch.tv/oauth2/authorize?client_id='+encodeURIComponent(C.cid)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(scopes().join(' '))+'&state='+s+(C.relog?'&force_verify=true':'')};
   function relogin(){const t=+localStorage.getItem('ytq-re')||0;if(Date.now()-t>300000){localStorage.setItem('ytq-re',Date.now());login()}else setSt('bad','Токен истёк. Нажми «Подключить»')}
   let ws=null,uid=null,on=false,tries=0;const doneIds=new Set();
   const H=()=>({Authorization:'Bearer '+C.tok,'Client-Id':C.cid});
@@ -1194,7 +1219,7 @@ if(view&&ME){
     twExtra();
     openWs('wss://eventsub.wss.twitch.tv/ws',null);
   }
-  function connBtn(x){const b=$('conn');b.textContent=x?'Отключить':'Подключить';b.className=x?'gh':'w';$('lout').hidden=!C.tok}
+  function connBtn(x){const b=$('conn');b.textContent=x?'Отключить':'Подключить';b.className=x?'gh':'w';$('lout').hidden=!C.tok;if(!C.tok)twSc=null;scopeUI()}
   function off(){on=false;connBtn(false);C.auto=false;saveC();if(ws){const w=ws;ws=null;w.close()}ordUI()}
   function retry(){if(on)setTimeout(connect,Math.min(30000,2000*++tries))}
   function openWs(u,old){
@@ -1222,8 +1247,7 @@ if(view&&ME){
     let sc=null;
     try{const r=await fetch('https://id.twitch.tv/oauth2/validate',{headers:{Authorization:'OAuth '+C.tok}});if(r.ok)sc=(await r.json()).scopes||[]}catch(e){}
     if(!sc)sc=String(C.sc||'').split(/[ +]/);
-    const miss=SCOPES.filter(s=>!sc.includes(s));
-    $('twm').hidden=!miss.length;$('rel').className=miss.length?'w':'gh';
+    twSc=sc;scopeUI();
     rewards();
     if(sc.includes('moderator:read:blocked_terms'))blocked();
   }
@@ -1412,7 +1436,7 @@ if(view&&ME){
     return '';
   }
   async function chat(text,who){
-    if(!C.chat_on)return;
+    if(!C.chat_on){log('В чат не пишу (выключено в настройках): '+text);return}
     if(!uid||!C.tok){log('Чат: Twitch не подключён — '+text);return}
     const lim=chatLimit(who);if(lim){log('Чат пропущен ('+lim+'): '+text);return}
     try{

@@ -137,7 +137,7 @@ const appInfo=()=>({name:APP.name,version:APP.version,edition:APP.edition||'',la
   newer:!!(UPD.latest&&vcmp(UPD.latest.version,APP.version)>0),err:UPD.err,stage:UPD.stage,msg:UPD.msg,checked:UPD.checked});
 const stage=(s,m)=>{UPD.stage=s;UPD.msg=m;console.log('Обновление: '+m)};
 async function checkUpdate(force){
-  if(APP.edition||(!force&&Date.now()-UPD.checked<6*36e5))return;
+  if(APP.edition||(!force&&Date.now()-UPD.checked<55*6e4))return;
   UPD.checked=Date.now();
   try{
     const r=await fetchVia('https://api.github.com/repos/'+APP.repo+'/releases/latest',{ua:APP.name+'/'+APP.version,headers:{Accept:'application/vnd.github+json'}});
