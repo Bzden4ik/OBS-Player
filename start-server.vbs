@@ -1,5 +1,4 @@
 nodeExe = "node"
-
 If WScript.Arguments.Count > 0 Then
   If WScript.Arguments(0) = "bye" Then
     On Error Resume Next
@@ -11,23 +10,18 @@ If WScript.Arguments.Count > 0 Then
     WScript.Quit 0
   End If
 End If
-
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set sh = CreateObject("WScript.Shell")
 sh.CurrentDirectory = fso.GetParentFolderName(WScript.ScriptFullName)
-
 On Error Resume Next
 sysPath = sh.RegRead("HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\Path")
 usrPath = sh.RegRead("HKCU\Environment\Path")
 On Error GoTo 0
 Set env = sh.Environment("Process")
 env("PATH") = sh.ExpandEnvironmentStrings(sysPath & ";" & usrPath) & ";" & env("PATH")
-
 cmd = nodeExe
 If InStr(nodeExe, " ") > 0 Then cmd = Chr(34) & nodeExe & Chr(34)
-
 extra = ""
-
 On Error Resume Next
 sh.Run cmd & " server.js --auto" & extra, 0, False
 If Err.Number <> 0 Then

@@ -1,4 +1,5 @@
-const http=require('http'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
+const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
+const APP={name:'Bzden4ik Player',version:'1.1.0',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -14,7 +15,6 @@ function direct(host,port,cb){
   s.setTimeout(20000,()=>fin(new Error('нет ответа')));
   s.on('connect',()=>fin());s.on('error',fin);
 }
-
 const UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36';
 function fetchVia(url,o){
   o=o||{};const u=new URL(url);
@@ -93,7 +93,6 @@ async function lyrics(title,author,len){
 }
 const ID=/^[\w-]{11}$/;
 const json=(res,o)=>{head(res,200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(o))};
-
 let PLAYS={};try{PLAYS=JSON.parse(fs.readFileSync(PLAYS_F,'utf8'))||{}}catch(e){}
 let playsDirty=false;
 function playSeen(m){
@@ -110,7 +109,6 @@ function savePlays(){
   if(ks.length>2000)ks.sort((a,b)=>PLAYS[a].t-PLAYS[b].t).slice(0,ks.length-2000).forEach(k=>delete PLAYS[k]);
   try{fs.writeFileSync(PLAYS_F+'.tmp',JSON.stringify(PLAYS));fs.renameSync(PLAYS_F+'.tmp',PLAYS_F)}catch(e){}
 }
-
 let TW=null,STATE={autoClosed:false,ids:[]};
 try{STATE={...STATE,...JSON.parse(fs.readFileSync(STATE_F,'utf8'))}}catch(e){}
 const saveState=()=>{try{fs.writeFileSync(STATE_F,JSON.stringify(STATE))}catch(e){}};
@@ -130,14 +128,154 @@ let leaving=null;
 const bye=()=>leaving||(leaving=Promise.race([closeOrders(),new Promise(r=>setTimeout(r,10000))]).then(savePlays));
 const shutdown=why=>{console.log("Выключаюсь: "+why);bye().then(()=>setTimeout(()=>process.exit(0),150))};
 const body=(req,max,cb)=>{let b='';req.on('data',d=>{b+=d;if(b.length>max)req.destroy()});req.on('end',()=>{let j=null;try{j=JSON.parse(b)}catch(e){}cb(j)})};
+const OPEN_OK=/^https:\/\/(t\.me\/vtuberstand|github\.com\/Bzden4ik\/OBS-Player)([\/?#][^\s"<>]*)?$/;
+const UPD={latest:null,checked:0,err:'',stage:'',msg:''},UPD_BUSY=['download','extract','install','restart'];
+const KEEP=new Set(['data.json','data.backup.json','plays.json','state.json']);
+const vnum=v=>String(v||'').replace(/^v/i,'').split(/[.-]/).map(n=>parseInt(n,10)||0);
+const vcmp=(a,b)=>{const x=vnum(a),y=vnum(b);for(let i=0;i<Math.max(x.length,y.length);i++)if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1;return 0};
+const appInfo=()=>({name:APP.name,version:APP.version,edition:APP.edition||'',latest:UPD.latest,
+  newer:!!(UPD.latest&&vcmp(UPD.latest.version,APP.version)>0),err:UPD.err,stage:UPD.stage,msg:UPD.msg,checked:UPD.checked});
+const stage=(s,m)=>{UPD.stage=s;UPD.msg=m;console.log('Обновление: '+m)};
+async function checkUpdate(force){
+  if(APP.edition||(!force&&Date.now()-UPD.checked<6*36e5))return;
+  UPD.checked=Date.now();
+  try{
+    const r=await fetchVia('https://api.github.com/repos/'+APP.repo+'/releases/latest',{ua:APP.name+'/'+APP.version,headers:{Accept:'application/vnd.github+json'}});
+    if(r.status===404)throw new Error('на GitHub ещё нет релизов');
+    if(r.status!==200)throw new Error('GitHub ответил '+r.status);
+    const j=JSON.parse(r.body),a=(j.assets||[]).find(x=>/\.zip$/i.test(x.name));
+    UPD.latest={version:String(j.tag_name||'').replace(/^v/i,''),url:j.html_url||'',notes:String(j.body||'').slice(0,4000),zip:a?a.browser_download_url:'',date:j.published_at||''};
+    UPD.err='';
+  }catch(e){UPD.err=e.message}
+}
+function download(url){
+  return new Promise((res,rej)=>{
+    let hops=0;
+    const go=href=>{
+      const x=new URL(href);
+      const r=https.get({host:x.hostname,path:x.pathname+x.search,headers:{'User-Agent':APP.name+'/'+APP.version}},resp=>{
+        if([301,302,303,307,308].includes(resp.statusCode)&&resp.headers.location){resp.resume();if(++hops>5)return rej(new Error('слишком много перенаправлений'));return go(new URL(resp.headers.location,href).href)}
+        if(resp.statusCode!==200){resp.resume();return rej(new Error('архив не скачался (HTTP '+resp.statusCode+')'))}
+        const ch=[];let n=0;
+        resp.on('data',d=>{n+=d.length;if(n>50e6){r.destroy();rej(new Error('архив слишком большой'))}else ch.push(d)});
+        resp.on('end',()=>res(Buffer.concat(ch)));resp.on('error',rej);
+      });
+      r.setTimeout(30000,()=>r.destroy(new Error('нет ответа от GitHub')));r.on('error',rej);
+    };
+    go(url);
+  });
+}
+const RELEASE_KEY='MCowBQYDK2VwAyEApq9urB4+WT+kbD47M6tJ1nlprBW60Mmwuc4IVFYxAtQ=';
+function unzip(buf){
+  let e=-1;
+  for(let i=buf.length-22;i>=Math.max(0,buf.length-22-65535);i--)if(buf.readUInt32LE(i)===0x06054b50){e=i;break}
+  if(e<0)throw new Error('архив повреждён');
+  const n=buf.readUInt16LE(e+10),out=new Map();let p=buf.readUInt32LE(e+16);
+  if(n>500)throw new Error('в архиве слишком много файлов');
+  for(let k=0;k<n;k++){
+    if(p+46>buf.length||buf.readUInt32LE(p)!==0x02014b50)throw new Error('архив повреждён');
+    const fl=buf.readUInt16LE(p+8),meth=buf.readUInt16LE(p+10),csize=buf.readUInt32LE(p+20),nl=buf.readUInt16LE(p+28),
+      xl=buf.readUInt16LE(p+30),cl=buf.readUInt16LE(p+32),lh=buf.readUInt32LE(p+42),name=buf.toString('utf8',p+46,p+46+nl);
+    p+=46+nl+xl+cl;
+    if(name.endsWith('/'))continue;
+    out.set(name,()=>{
+      if(fl&1)throw new Error('архив зашифрован');
+      if(lh+30>buf.length||buf.readUInt32LE(lh)!==0x04034b50)throw new Error('архив повреждён');
+      const d=lh+30+buf.readUInt16LE(lh+26)+buf.readUInt16LE(lh+28);
+      if(d+csize>buf.length)throw new Error('архив повреждён');
+      const raw=buf.subarray(d,d+csize);
+      if(meth===0)return raw;
+      if(meth===8)try{return zlib.inflateRawSync(raw,{maxOutputLength:20e6})}catch(x){throw new Error('файл '+name+' в архиве повреждён или слишком большой')}
+      throw new Error('неизвестное сжатие в архиве');
+    });
+  }
+  return out;
+}
+const sha256=b=>crypto.createHash('sha256').update(b).digest('hex');
+function signedFiles(zip,ver){
+  if(!RELEASE_KEY)throw new Error('в этой сборке нет ключа подписи — обнови вручную со страницы релизов');
+  const all=unzip(zip),mk=[...all.keys()].find(k=>/^([^/]+\/)?release\.json$/.test(k));
+  if(!mk)throw new Error('в архиве нет подписи — такой архив не ставлю');
+  const pre=mk.slice(0,-'release.json'.length),get=f=>{const x=all.get(pre+f);return x?x():null};
+  const mf=get('release.json'),sig=get('release.sig');let ok=false;
+  try{ok=!!sig&&crypto.verify(null,mf,crypto.createPublicKey({key:Buffer.from(RELEASE_KEY,'base64'),format:'der',type:'spki'}),Buffer.from(sig.toString('utf8').trim(),'base64'))}catch(e){}
+  if(!ok)throw new Error('подпись не сходится: архив выпустил не автор или он повреждён. Обновление отменено, ничего не тронуто');
+  let m=null;try{m=JSON.parse(mf.toString('utf8'))}catch(e){}
+  if(!m||m.version!==ver)throw new Error('в архиве версия '+(m&&m.version)+', а не '+ver+' — обновление отменено');
+  const out=new Map();
+  for(const [f,h] of Object.entries(m.files||{})){
+    if(!/^[A-Za-z0-9][\w.-]*$/.test(f)||KEEP.has(f))throw new Error('в подписи недопустимое имя файла: '+f);
+    const d=get(f);
+    if(!d||sha256(d)!==h)throw new Error('файл '+f+' не совпадает с подписью — обновление отменено, ничего не тронуто');
+    out.set(f,d);
+  }
+  if(!out.has('server.js')||!out.has('redeem-player.html'))throw new Error('в архиве нет server.js и redeem-player.html');
+  return out;
+}
+async function runUpdate(){
+  if(APP.edition)throw new Error('в этой сборке обновления с GitHub не ставятся');
+  if(fs.existsSync(path.join(__dirname,'.git')))throw new Error('это папка с исходниками (git) — её обновляют через git, а не из релиза');
+  const L=UPD.latest;
+  if(!L||vcmp(L.version,APP.version)<=0)throw new Error('новой версии нет');
+  if(!L.zip)throw new Error('в релизе '+L.version+' нет архива .zip');
+  stage('download','Скачиваю версию '+L.version+'…');
+  const zip=await download(L.zip);
+  stage('extract','Проверяю подпись…');
+  const files=signedFiles(zip,L.version);
+  const tmp=path.join(os.tmpdir(),'bzden4ik-player-update');
+  fs.rmSync(tmp,{recursive:true,force:true});fs.mkdirSync(tmp,{recursive:true});
+  fs.writeFileSync(path.join(tmp,'server.js'),files.get('server.js'));
+  try{execFileSync(process.execPath,['--check',path.join(tmp,'server.js')],{stdio:'pipe',windowsHide:true})}
+  catch(e){throw new Error('в новой версии ошибка в server.js — обновление отменено, ничего не тронуто')}
+  finally{fs.rmSync(tmp,{recursive:true,force:true})}
+  stage('install','Устанавливаю…');
+  const bak=path.join(__dirname,'backup');fs.rmSync(bak,{recursive:true,force:true});fs.mkdirSync(bak);
+  for(const [f,d] of files){
+    const dst=path.join(__dirname,f);
+    if(fs.existsSync(dst))fs.copyFileSync(dst,path.join(bak,f));
+    fs.writeFileSync(dst,d);
+  }
+  restartObs(L.version);
+}
+function splitArgs(s){
+  const out=[];let cur='',q=false,has=false;
+  for(const c of String(s||'')){
+    if(c==='"'){q=!q;has=true;continue}
+    if(!q&&/\s/.test(c)){if(cur||has){out.push(cur);cur='';has=false}continue}
+    cur+=c;
+  }
+  if(cur||has)out.push(cur);
+  return out;
+}
+const RESTARTER="const {execFileSync,spawn}=require('child_process');const o=JSON.parse(process.argv[1]);"+
+  "const alive=()=>{try{return execFileSync('tasklist',['/FI','PID eq '+o.pid,'/FO','CSV','/NH'],{encoding:'utf8',windowsHide:true}).includes('\"'+o.pid+'\"')}catch(e){return false}};"+
+  "try{execFileSync('taskkill',['/PID',String(o.pid)],{windowsHide:true,stdio:'ignore'})}catch(e){}"+
+  "let n=0;const t=setInterval(()=>{if(!alive()){clearInterval(t);setTimeout(()=>{spawn(o.exe,o.args,{cwd:o.cwd,detached:true,stdio:'ignore'}).unref();setTimeout(()=>process.exit(0),500)},3000)}"+
+  "else if(++n>180){clearInterval(t);process.exit(0)}},1000);";
+function restartObs(ver){
+  const ps='Get-CimInstance Win32_Process | Where-Object { $_.Name -match "^obs(64|32)?\\.exe$" } | Select-Object -First 1 ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress';
+  execFile('powershell',['-NoProfile','-NonInteractive','-Command',ps],{windowsHide:true},(e,out)=>{
+    let o=null;try{o=JSON.parse(out)}catch(x){}
+    if(!o||!o.ExecutablePath){stage('done','Версия '+ver+' установлена. Перезапусти OBS, чтобы она заработала');return}
+    const arg={pid:o.ProcessId,exe:o.ExecutablePath,args:splitArgs(o.CommandLine).slice(1),cwd:path.dirname(o.ExecutablePath)};
+    spawn(process.execPath,['-e',RESTARTER,JSON.stringify(arg)],{detached:true,stdio:'ignore',windowsHide:true}).unref();
+    stage('restart','Версия '+ver+' установлена, OBS перезапускается. Если OBS спросит подтверждение (идёт стрим или запись) — ответь в его окне');
+  });
+}
 process.on('exit',savePlays);
 process.on('SIGINT',()=>process.exit(0));
-
 const SEC={'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"frame-ancestors 'none'"};
 const head=(res,code,h)=>res.writeHead(code,{...SEC,...(h||{})});
+const CSP=n=>["default-src 'self'","script-src 'nonce-"+n+"' https://www.youtube.com https://s.ytimg.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://db.onlinewebfonts.com","font-src 'self' data: https://fonts.gstatic.com https://db.onlinewebfonts.com",
+  "img-src 'self' data: https://i.ytimg.com","frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+  "connect-src 'self' https://api.twitch.tv https://id.twitch.tv wss://eventsub.wss.twitch.tv https://www.googleapis.com https://www.youtube.com",
+  "object-src 'none'","base-uri 'none'","form-action 'none'","frame-ancestors 'none'"].join('; ');
 const srv=http.createServer((req,res)=>{
   if(!HOSTS.includes(req.headers.host)){head(res,403);res.end();return}
   const u=new URL(req.url,'http://x');
+  const page=u.pathname==='/'||u.pathname==='/redeem-player.html',sfs=req.headers['sec-fetch-site'];
+  if(!page&&u.pathname!=='/proxy.pac'&&sfs&&sfs!=='same-origin'&&sfs!=='none'){head(res,403);res.end();return}
   if(req.method==='POST'){
     const o=req.headers.origin;
     if((o&&!ORIGINS.includes(o))||req.headers['x-radio']!=='1'){head(res,403);res.end();return}
@@ -157,11 +295,20 @@ const srv=http.createServer((req,res)=>{
     ]).then(()=>json(res,o));return;
   }
   if(u.pathname==='/open'&&req.method==='POST'){
-    body(req,200,j=>{const id=j&&j.id;
-      if(!ID.test(id||'')){head(res,400);res.end();return}
-      try{spawn('rundll32',['url.dll,FileProtocolHandler','https://www.youtube.com/watch?v='+id],{detached:true,stdio:'ignore',windowsHide:true}).unref();head(res,204)}catch(e){head(res,500)}
+    body(req,500,j=>{
+      const id=j&&j.id,url=j&&j.url;
+      const to=ID.test(id||'')?'https://www.youtube.com/watch?v='+id:typeof url==='string'&&OPEN_OK.test(url)?url:'';
+      if(!to){head(res,400);res.end();return}
+      try{spawn('rundll32',['url.dll,FileProtocolHandler',to],{detached:true,stdio:'ignore',windowsHide:true}).unref();head(res,204)}catch(e){head(res,500)}
       res.end()});
     return;
+  }
+  if(u.pathname==='/app'&&req.method==='GET'){json(res,appInfo());return}
+  if(u.pathname==='/app/check'&&req.method==='POST'){checkUpdate(true).then(()=>json(res,appInfo()));return}
+  if(u.pathname==='/app/update'&&req.method==='POST'){
+    if(UPD_BUSY.includes(UPD.stage)){head(res,409);res.end();return}
+    runUpdate().catch(e=>{UPD.stage='error';UPD.msg=e.message;console.log('Обновление: '+e.message)});
+    json(res,appInfo());return;
   }
   if(u.pathname==='/banned-words.json'&&req.method==='GET'){
     fs.readFile(path.join(__dirname,'banned-words.json'),(e,d)=>{head(res,e?404:200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(e?'':d)});return;
@@ -210,10 +357,12 @@ const srv=http.createServer((req,res)=>{
     req.on('end',()=>{try{const m=JSON.parse(b);log.push({id:++seq,m});if(log.length>300)log.shift();playSeen(m)}catch(e){}head(res,204);res.end()});
     return;
   }
-  if(u.pathname==='/redeem-player.html'||u.pathname==='/'){
-    fs.readFile(FILE,(e,d)=>{
+  if(page){
+    fs.readFile(FILE,'utf8',(e,d)=>{
       if(e){head(res,500,{'Content-Type':'text/plain; charset=utf-8'});res.end('Рядом с server.js нет redeem-player.html');return}
-      head(res,200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(d);
+      const n=crypto.randomBytes(16).toString('base64');
+      head(res,200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':CSP(n)});
+      res.end(d.replace(/<script>/g,'<script nonce="'+n+'">'));
     });
     return;
   }
@@ -263,6 +412,7 @@ srv.once('listening',()=>{
     if(Date.now()-GEO.at>6e5){GEO.at=Date.now();geo()}
   },2000);
   setInterval(savePlays,5000);
+  setTimeout(()=>checkUpdate(),8000);setInterval(()=>checkUpdate(),36e5);
 });
 if(AUTO){
   let obsSeen=false,obsGone=0;

@@ -124,6 +124,11 @@ button.gh:hover{background:var(--pill)}
 .ig{position:relative}
 .ig input{width:100%;height:38px;padding-right:46px}
 .ig .ic{position:absolute;right:4px;top:4px;width:30px;height:30px}.ig svg{width:16px;height:16px}
+.help{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:14px;background:var(--s2)}
+.help b{font-weight:600}.help span{color:var(--mu);font-size:12px;line-height:1.45}.help button{height:36px;margin-top:2px}
+.lnk,.lnk:hover{align-self:flex-start;background:transparent;padding:2px;border-radius:6px;color:var(--mu);font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.lnk:hover{color:var(--fg)}
+.ed{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:99px;background:var(--fg);color:var(--ink);font-size:11px;font-weight:600;vertical-align:2px}
 .lim{position:relative;display:flex;align-items:center;gap:8px;color:var(--mu);font-size:12px;line-height:1.35;cursor:pointer;width:fit-content;max-width:100%;padding-left:2px}
 .tr{display:flex;flex-direction:column;gap:6px;background:var(--s1);border:1px solid var(--ln);border-radius:16px;padding:8px;transition:background .2s,border-color .2s}
 .tr:hover{background:var(--s2)}
@@ -283,7 +288,7 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <div class="mk" id="rwf" hidden><input id="rwt" maxlength="45" value="Заказать трек" aria-label="Название награды"><label class="fld"><input id="rwc" inputmode="numeric" value="300" aria-label="Цена в баллах"><i>баллов</i></label><button id="rwb" class="w">Создать награду</button></div>
       <label class="fi"><span>Награда — часть названия, пусто значит любая</span><input id="flt" placeholder="например: видео"></label>
       <label class="lim"><input type="checkbox" class="tg" id="chat_on"><span class="sw sm"></span>писать зрителю в чат, почему заказ не принят</label>
-      <div class="bar"><button id="conn" class="w">Подключить</button><button id="rel" class="gh" title="Войти в Twitch заново с нужными правами: возврат баллов, сообщения в чат, проверка слов">Обновить</button></div>
+      <div class="bar"><button id="conn" class="w">Подключить</button><button id="rel" class="gh" title="Войти в Twitch заново с нужными правами: возврат баллов, сообщения в чат, проверка слов">Обновить</button><button id="lout" class="gh" title="Выйти из аккаунта Twitch — потом можно войти в другой" hidden>Выйти</button></div>
       <details><summary>Client ID и токен</summary>
         <div class="row"><label>Client ID</label><input id="cid" autocomplete="off"></div>
         <div class="row"><label>Токен</label><input id="tok" type="password" autocomplete="off"></div></details>
@@ -318,8 +323,16 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <div class="lr"><input type="checkbox" class="tg" id="ord_auto"><label class="sw" for="ord_auto"></label><label class="lt" for="ord_auto"><b>Заказы вместе с OBS</b><i>закрывать при выходе из OBS и открывать при запуске</i></label></div>
       <div class="hint">Громкость — во вкладке «Сейчас», под кнопками плеера</div>
     </div>
+    <div class="card">
+      <div class="ch"><div class="h" id="apn">Bzden4ik Player</div><span class="stat" id="aps"></span></div>
+      <div class="sub" id="apv">Версия…</div>
+      <div class="warn" id="apu" hidden></div>
+      <div class="bar" id="apb"><button id="apc" class="gh">Проверить обновления</button><button id="apg" class="w" hidden>Обновить</button></div>
+      <button id="aprel" class="lnk">Все версии на GitHub</button>
+    </div>
     <div class="card"><div class="h">Отладка</div><div id="lg"></div><pre id="dp"></pre>
       <div class="row"><button id="dcp">Копировать</button><button id="dcl">Очистить лог</button></div>
+      <div class="help"><b>Нужна помощь или нашли проблему?</b><span>Напиши в Telegram-канал и приложи текст отладки — кнопка «Копировать» выше.</span><button id="tgk" class="w">Telegram · @vtuberstand</button></div>
       <div class="hint">История и плейлисты хранятся в data.json рядом с server.js</div></div>
   </section>
   </main>
@@ -366,7 +379,6 @@ async function poll(){
   setTimeout(poll,500);
 }
 poll();
-
 function loadYT(){
   let n=0;
   (function go(){
@@ -378,7 +390,6 @@ function loadYT(){
     setTimeout(()=>{if(!(window.YT&&YT.Player)){dbg('YT API','не загрузился, повтор #'+(++n));s.remove();go()}},20000);
   })();
 }
-
 const ME=new URLSearchParams(location.search).get('role')==='me';
 if(view&&ME){
   document.body.className='g';$('panel').style.display='none';
@@ -466,10 +477,15 @@ if(view&&ME){
   $('box').style.display='none';
   dbg('Панель','работает');
   const h=new URLSearchParams(location.hash.slice(1));
-  const qe=new URLSearchParams(location.search).get('error_description');
-  if(h.get('access_token')){C.tok=h.get('access_token');C.sc=h.get('scope')||'';C.auto=true;saveC();history.replaceState(null,'',location.pathname)}
+  let qe=new URLSearchParams(location.search).get('error_description');
+  if(h.get('access_token')){
+    let w=null;try{w=JSON.parse(localStorage.getItem('ytq-state')||'null')}catch(e){}
+    try{localStorage.removeItem('ytq-state')}catch(e){}
+    if(w&&w.s&&h.get('state')===w.s&&Date.now()-w.at<6e5){C.tok=h.get('access_token');C.sc=h.get('scope')||'';C.auto=true;C.relog=false;saveC()}
+    else qe='вход не принят: панель его не начинала или он устарел. Нажми «Подключить» ещё раз';
+    history.replaceState(null,'',location.pathname);
+  }
   else if(qe)history.replaceState(null,'',location.pathname);
-
   const P={
     note:'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
     clock:'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2',
@@ -498,7 +514,6 @@ if(view&&ME){
   };
   const ico=(n,f)=>'<svg viewBox="0 0 24 24" fill="'+(f?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
   document.querySelectorAll('i[data-i]').forEach(i=>i.innerHTML=ico(i.dataset.i));
-
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const url=id=>'https://youtu.be/'+id;
   const lg=$('lg');
@@ -519,7 +534,6 @@ if(view&&ME){
     if(s(d)===s(t))return 'Сегодня';if(s(d)===s(y))return 'Вчера';
     return d.toLocaleDateString('ru-RU',d.getFullYear()===t.getFullYear()?{day:'numeric',month:'long'}:{day:'numeric',month:'long',year:'numeric'})};
   const rk=()=>Math.random().toString(36).slice(2,10);
-
   let DB2={hist:[],pl:{[LIKES]:[]}},dbOk=false;
   const TT={};
   let sv=null;
@@ -566,7 +580,6 @@ if(view&&ME){
   let jl=null;
   function like(tr){const n=lp();if(inPl(n,tr.id)){rmPl(n,tr.id);toast('Убрано из «'+n+'»')}else{addPl(n,tr);jl=tr.id}renderAll();jl=null}
   function banTr(tr){if(!C.bans.some(b=>b.id===tr.id)){C.bans.push({id:tr.id,t:tr.t||TT[tr.id]||''});saveC();renderBans()}toast('Видео в бане')}
-
   async function refundE(e,q){
     const say=q?()=>{}:toast;
     if(!e||!e.rid||!e.rw||!e.bid){say('Для этого заказа баллы вернуть нельзя');return false}
@@ -584,7 +597,6 @@ if(view&&ME){
     }catch(x){say('Нет связи с Twitch')}
     return false;
   }
-
   function btn(icon,title,fn,cls,fill){const b=document.createElement('button');b.className=cls||'ic';b.innerHTML=ico(icon,fill);b.title=title;b.setAttribute('aria-label',title);b.onclick=e=>{e.stopPropagation();fn(b)};return b}
   function cbtn(icon,title,fn){
     let t=null;const b=btn(icon,title,()=>{
@@ -617,7 +629,6 @@ if(view&&ME){
   document.addEventListener('pointerdown',e=>{if(popFor&&!pop.contains(e.target)&&!popFor.contains(e.target))closePop()},true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
   addEventListener('resize',closePop);document.querySelector('main').addEventListener('scroll',closePop,{passive:true});
-
   let ri=0;const shown=new Set();
   const SL={queued:'в очереди',playing:'играет',played:'сыграно',skipped:'пропущено',removed:'удалено из очереди',banned:'в бане',rejected:'отклонено',checking:'проверка…',lost:'не доиграл (сбой)'};
   function row(tr,o){
@@ -820,11 +831,46 @@ if(view&&ME){
       c.append(t,a);d.append(im,c);bl.append(d);
     });
   }
+  function openUrl(u){
+    fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({url:u})}).then(r=>{if(!r.ok)throw 0;toast('Открываю в браузере')}).catch(()=>window.open(u,'_blank'));
+  }
+  $('tgk').onclick=()=>openUrl('https://t.me/vtuberstand');
+  const UPB=['download','extract','install','restart'];let app=null,apT=0,apArm=0;
+  async function appPoll(){
+    try{app=await yget('/app')}catch(e){app=null}
+    appUI();clearTimeout(apT);apT=setTimeout(appPoll,app&&UPB.includes(app.stage)?1000:60000);
+  }
+  function appUI(){
+    const s=$('aps'),v=$('apv'),u=$('apu'),g=$('apg'),c=$('apc'),st=(t,k)=>{s.textContent=t;s.className='stat '+(k||'');s.hidden=!t},say=t=>{u.textContent=t;u.hidden=!t};
+    if(!app){st('нет связи','bad');v.textContent='Сервер не ответил';say('');g.hidden=c.hidden=true;return}
+    $('apn').textContent=app.name;
+    if(app.edition){v.textContent='';const b=el('span','ed');b.textContent=app.edition;v.append('Личная сборка',b);st('');say('');g.hidden=c.hidden=true;$('aprel').hidden=true;return}
+    v.textContent='Версия '+app.version;c.hidden=false;c.textContent=app.newer?'Проверить':'Проверить обновления';
+    const busy=UPB.includes(app.stage),L=app.latest;
+    g.hidden=!app.newer||busy;c.hidden=busy;g.textContent='Обновить';g.classList.remove('arm');
+    if(busy){st('обновление','wait');say(app.msg);return}
+    if(app.stage==='error'){st('ошибка','bad');say('Обновление не удалось: '+app.msg);return}
+    if(app.stage==='done'){st('готово','ok');say(app.msg);return}
+    if(app.newer){st('есть обновление','wait');
+      const notes=String(L.notes||'').split(/\r?\n/).filter(x=>!/^\s*#/.test(x)).map(x=>x.replace(/^[#>*\s-]+/,'').replace(/\*\*/g,'').trim()).filter(x=>x&&!/^v?\d+(\.\d+)+$/.test(x)).slice(0,1).join(' ');
+      say('Вышла версия '+L.version+'. '+(notes?notes.slice(0,220)+(notes.length>220?'…':''):'')+' OBS перезапустится сам — не обновляйся посреди стрима.');return}
+    if(app.err){st('не проверить','bad');say('Не удалось проверить обновления: '+app.err);return}
+    st(app.checked?'актуальная':'','ok');say('');
+  }
+  $('apc').onclick=async()=>{const c=$('apc');c.disabled=true;c.textContent='Проверяю…';
+    try{app=await(await fetch('/app/check',{method:'POST',headers:{'X-Radio':'1'}})).json()}catch(e){}
+    c.disabled=false;appUI();if(app&&!app.newer&&!app.err)toast('У тебя последняя версия')};
+  $('apg').onclick=async()=>{const g=$('apg');
+    if(!g.classList.contains('arm')){g.classList.add('arm');g.textContent='Нажми ещё раз';clearTimeout(apArm);apArm=setTimeout(appUI,4000);return}
+    clearTimeout(apArm);g.hidden=true;
+    try{const r=await fetch('/app/update',{method:'POST',headers:{'X-Radio':'1'}});if(r.ok)app=await r.json()}catch(e){}
+    log('Обновление до '+(app&&app.latest?app.latest.version:'')+' запущено');appPoll()};
+  $('aprel').onclick=()=>openUrl(app&&app.latest&&app.latest.url||'https://github.com/Bzden4ik/OBS-Player/releases');
+  setTimeout(appPoll,300);
   function openV(id){
     fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({id})}).then(r=>{if(!r.ok)throw 0;toast('Открываю в браузере')}).catch(()=>window.open(url(id),'_blank'));
   }
   function renderAll(){renderNow();renderQ();renderHist();renderPl();renderBans()}
-
   function tab(t){
     closePop();shown.clear();
     document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
@@ -917,7 +963,6 @@ if(view&&ME){
   $('dcl').onclick=()=>{lg.innerHTML='';toast('Лог очищен')};
   $('rel').onclick=()=>{C.tok='';$('tok').value='';saveC();login()};
   if(qe)log('Twitch: '+qe);
-
   let last=0,sig='';
   onmsg=m=>{
     if(m.t==='st'){last=Date.now();setInfo('на связи · в очереди '+m.q,true);showNow(m);if(!stSeen){stSeen=true;setTimeout(tryRec,800)}}
@@ -951,7 +996,6 @@ if(view&&ME){
     const s=JSON.stringify([m.cur,m.ck,now.t,pa,ql.map(x=>x.k),apl&&[apl.k,apl.pos]]);
     if(s!==sig){sig=s;renderNow();renderQ()}else if(scrub===null)prog();
   }
-
   const fmtN=n=>Math.round(n).toLocaleString('ru-RU');
   const fmtMin=s=>s%60?fmt(s):s/60+' мин';
   const cname=cc=>{try{return new Intl.DisplayNames(['ru'],{type:'region'}).of(cc)}catch(e){return cc}};
@@ -970,37 +1014,59 @@ if(view&&ME){
       embed:st.embeddable!==false,live:!!sn.liveBroadcastContent&&sn.liveBroadcastContent!=='none',
       age:(cd.contentRating||{}).ytRating==='ytAgeRestricted',blocked:rr.blocked||null,allowed:rr.allowed||null};
   }
-
   let WL={hate:[],mat:[],except:[]},twTerms=[],wcomp=null;
   fetch('/banned-words.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)
     .then(j=>{if(j){WL={hate:j.hate||[],mat:j.mat||[],except:(j.except||[]).map(s=>nrm(s))};wcomp=null;wInfo()}}).catch(()=>{});
   const HG={a:'aа@4',b:'bь6',c:'cс',e:'eе3',g:'g9',h:'hн',i:'iі1!|',k:'kк',l:'l1|',m:'mм',n:'nп',o:'oо0',p:'pр',s:'s$5',t:'tт7',u:'uи',x:'xх',y:'yу',
     'а':'аa@4','б':'б6','в':'вb8','г':'гr','е':'еe3','з':'з3','и':'иui1','к':'кk','м':'мm','н':'нh','о':'оo0','п':'пn','р':'рp','с':'сc','т':'тt','у':'уy','х':'хx','ч':'ч4','ш':'шw','ь':'ьb'};
   const nrm=s=>String(s).normalize('NFKD').replace(/[̀-ͯ​-‏⁠﻿­]/g,'').toLowerCase();
-  const rx=s=>s.replace(/[-\\\]^[]/g,'\\$&');
-  function termRe(w){
+  function term(w){
     const pre=w.startsWith('*'),stem=w.endsWith('*');w=w.replace(/^\*|\*$/g,'');
-    const body=[...w].map(c=>c===' '?'[\\s\\W_]+':'['+rx(HG[c]||c)+']+').join('[.\\-_*·]{0,2}');
-    return new RegExp((pre?'':'(?<![\\p{L}\\p{N}])')+body+(stem?'':'(?![\\p{L}\\p{N}])'),'gu');
+    return{pre,stem,seg:[...w].map(c=>c===' '?null:new Set(HG[c]||c))};
   }
   const myWords=()=>String(C.w_my||'').split(/[\n,;]+/).map(s=>s.trim()).filter(s=>s.replace(/\*/g,''));
   function wlist(){
     if(wcomp)return wcomp;
-    const out=[],add=(a,cat)=>a.forEach(w=>{w=nrm(w).trim();if(w.replace(/\*/g,''))try{out.push({w,cat,re:termRe(w)})}catch(e){}});
+    const out=[],add=(a,cat)=>a.forEach(w=>{w=nrm(w).trim();if(w.replace(/\*/g,''))out.push({w,cat,...term(w)})});
     if(C.w_hate)add(WL.hate,'hate');if(C.w_mat)add(WL.mat,'mat');if(C.w_tw)add(twTerms,'tw');add(myWords(),'my');
     return wcomp=out;
+  }
+  const SEPS='.-_*·';
+  function prep(t){
+    const cp=[...t],n=cp.length,ids=new Map(),cid=new Uint32Array(n),ch=[],lnD=[],spD=[],sepD=[];
+    for(let i=0;i<n;i++){const c=cp[i];let d=ids.get(c);
+      if(d===undefined){d=ch.length;ids.set(c,d);ch.push(c);lnD.push(/[\p{L}\p{N}]/u.test(c)?1:0);spD.push(/[\s\W_]/u.test(c)?1:0);sepD.push(SEPS.includes(c)?1:0)}
+      cid[i]=d}
+    const ln=i=>i>=0&&i<n&&lnD[cid[i]]===1,exc=new Int8Array(n);
+    const isExc=i=>{
+      if(!exc[i]){let w='';for(let k=i;k<n&&w.length<64;k++){if(lnD[cid[k]])w+=cp[k];else if(!sepD[cid[k]])break}
+        exc[i]=WL.except.some(e=>w.startsWith(e))?1:-1}
+      return exc[i]===1};
+    return{n,cid,ch,spD,sepD,ln,isExc};
+  }
+  function hit(x,T){
+    const S=x.seg,m=S.length,n=T.n,D=T.ch.length;
+    const M=S.map(s=>{const a=new Uint8Array(D);for(let d=0;d<D;d++)a[d]=s?(s.has(T.ch[d])?1:0):T.spD[d];return a});
+    if(!M[0].includes(1))return false;
+    let a0=new Uint8Array(m),a1=new Uint8Array(m),a2=new Uint8Array(m),b0=new Uint8Array(m),b1=new Uint8Array(m),b2=new Uint8Array(m),live=false;
+    for(let i=0;i<n;i++){
+      const d=T.cid[i],sp=T.sepD[d],st=M[0][d]&&(x.pre||!T.ln(i-1))&&!T.isExc(i)?1:0;
+      if(!live&&!st)continue;
+      live=false;
+      for(let j=0;j<m;j++){
+        const v=M[j][d]&(a0[j]|(j?a0[j-1]|a1[j-1]|a2[j-1]:st));
+        b0[j]=v;b1[j]=sp&a0[j];b2[j]=sp&a1[j];if(v|b1[j]|b2[j])live=true;
+      }
+      if(b0[m-1]&&(x.stem||!T.ln(i+1)))return true;
+      [a0,b0]=[b0,a0];[a1,b1]=[b1,a1];[a2,b2]=[b2,a2];
+    }
+    return false;
   }
   function badWord(text){
     if(!text)return null;
     const t=nrm(text).replace(/(?<![\p{L}\p{N}])\p{L}(?: \p{L}){3,}(?![\p{L}\p{N}])/gu,m=>m.replace(/ /g,''));
-    for(const x of wlist()){
-      x.re.lastIndex=0;let m;
-      while((m=x.re.exec(t))){
-        const word=((t.slice(m.index).match(/^[\p{L}\p{N}.\-_*·]+/u)||[''])[0]).replace(/[.\-_*·]/g,'');
-        if(!WL.except.some(e=>word.startsWith(e)))return x;
-        if(!m[0])x.re.lastIndex++;
-      }
-    }
+    const T=prep(t);
+    for(const x of wlist())if(hit(x,T))return x;
     return null;
   }
   const mask=w=>{w=w.replace(/\*/g,'');return w.length<3?w[0]+'•':w[0]+'•'.repeat(w.length-2)+w.slice(-1)};
@@ -1024,7 +1090,6 @@ if(view&&ME){
       return bad?parts[+bad.msg_id.split('_')[0]].src:false;
     }catch(e){return null}
   }
-
   const no=(r,m)=>({ok:false,r,m:m||r});
   const NOCHK='не получилось проверить видео, попробуй позже',GONE='видео удалено, закрыто или ссылка с ошибкой',
     LIVE='трансляции и премьеры заказывать нельзя',AGE='у видео возрастное ограничение 18+',GEOB='видео заблокировано в стране, откуда играет плеер';
@@ -1103,13 +1168,15 @@ if(view&&ME){
     const txt=(lead||'заказ не принят')+': '+msg+'. ';
     if(!e.rid){log('Сообщение в чат было бы: @'+e.u+', '+txt+'Баллы возвращены.');return}
     const ok=await refundE(e);
-    chat('@'+(e.ul||e.u)+', '+txt+(ok?'Баллы возвращены.':'Баллы вернуть автоматически не вышло — стример вернёт вручную.'));
+    chat('@'+(e.ul||e.u)+', '+txt+(ok?'Баллы возвращены.':'Баллы вернуть автоматически не вышло — стример вернёт вручную.'),e.ul||e.u);
   }
-  function note(e,msg){if(e&&e.rid)chat('@'+(e.ul||e.u)+', '+msg+'. Баллы возвращены.')}
+  function note(e,msg){if(e&&e.rid)chat('@'+(e.ul||e.u)+', '+msg+'. Баллы возвращены.',e.ul||e.u)}
   $('tp').onclick=()=>{const v=$('tl').value,id=yid(v);if(!id){toast(linkWhy(v));return}order(id,'тест',!$('tv').checked);$('tl').value=''};
-
   const SCOPES=['channel:manage:redemptions','user:write:chat','moderation:read','moderator:read:blocked_terms'];
-  const login=()=>{location.href='https://id.twitch.tv/oauth2/authorize?client_id='+encodeURIComponent(C.cid)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(SCOPES.join(' '))};
+  const login=()=>{
+    const a=new Uint8Array(16);crypto.getRandomValues(a);const s=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
+    try{localStorage.setItem('ytq-state',JSON.stringify({s,at:Date.now()}))}catch(e){}
+    location.href='https://id.twitch.tv/oauth2/authorize?client_id='+encodeURIComponent(C.cid)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(SCOPES.join(' '))+'&state='+s+(C.relog?'&force_verify=true':'')};
   function relogin(){const t=+localStorage.getItem('ytq-re')||0;if(Date.now()-t>300000){localStorage.setItem('ytq-re',Date.now());login()}else setSt('bad','Токен истёк. Нажми «Подключить»')}
   let ws=null,uid=null,on=false,tries=0;const doneIds=new Set();
   const H=()=>({Authorization:'Bearer '+C.tok,'Client-Id':C.cid});
@@ -1127,7 +1194,7 @@ if(view&&ME){
     twExtra();
     openWs('wss://eventsub.wss.twitch.tv/ws',null);
   }
-  function connBtn(x){const b=$('conn');b.textContent=x?'Отключить':'Подключить';b.className=x?'gh':'w'}
+  function connBtn(x){const b=$('conn');b.textContent=x?'Отключить':'Подключить';b.className=x?'gh':'w';$('lout').hidden=!C.tok}
   function off(){on=false;connBtn(false);C.auto=false;saveC();if(ws){const w=ws;ws=null;w.close()}ordUI()}
   function retry(){if(on)setTimeout(connect,Math.min(30000,2000*++tries))}
   function openWs(u,old){
@@ -1336,9 +1403,18 @@ if(view&&ME){
       cur=j.pagination&&j.pagination.cursor;if(!cur)break}}catch(e){}
     twTerms=out;wcomp=null;wInfo();
   }
-  async function chat(text){
+  const chatT=[],chatTo=new Map();
+  function chatLimit(who){
+    const t=Date.now();while(chatT.length&&t-chatT[0]>30000)chatT.shift();
+    if(chatT.length>=10)return 'слишком много сообщений подряд';
+    if(who&&t-(chatTo.get(who)||0)<30000)return 'этому зрителю писали меньше 30 с назад';
+    chatT.push(t);if(who){chatTo.set(who,t);if(chatTo.size>500)chatTo.delete(chatTo.keys().next().value)}
+    return '';
+  }
+  async function chat(text,who){
     if(!C.chat_on)return;
     if(!uid||!C.tok){log('Чат: Twitch не подключён — '+text);return}
+    const lim=chatLimit(who);if(lim){log('Чат пропущен ('+lim+'): '+text);return}
     try{
       const r=await fetch('https://api.twitch.tv/helix/chat/messages',{method:'POST',headers:{...H(),'Content-Type':'application/json'},
         body:JSON.stringify({broadcaster_id:uid,sender_id:uid,message:text.slice(0,500)})});
@@ -1372,9 +1448,21 @@ if(view&&ME){
     order(id,ev.user_name,own,{h});
   }
   $('conn').onclick=()=>{if(on){off();setSt('off','Отключено. Заказы за баллы не принимаются')}else connect(true)};
+  $('lout').onclick=()=>{
+    const tok=C.tok;off();
+    C.tok='';C.sc='';C.relog=true;saveC();$('tok').value='';
+    uid=null;rwCur=null;rwMine=[];twReady=false;twTerms=[];wcomp=null;
+    const tc=$('twc');tc.textContent='не подключён';tc.className='off';
+    $('twr').textContent='—';$('twr').className='off';$('twrw').textContent='';$('rwf').hidden=true;$('twm').hidden=true;
+    ordUI();wInfo();connBtn(false);
+    fetch('/twitch',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({cid:C.cid,tok:'',uid:'',ids:[],auto:false})}).catch(()=>{});
+    if(tok)fetch('https://id.twitch.tv/oauth2/revoke',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'client_id='+encodeURIComponent(C.cid)+'&token='+encodeURIComponent(tok)}).catch(()=>{});
+    setSt('off','Ты вышел из аккаунта. «Подключить» — войти снова, в том числе в другой аккаунт');log('Выход из аккаунта Twitch');
+  };
+  connBtn(false);
   $('flt').addEventListener('change',()=>{if(uid)rewards()});
   wInfo();
-
   let xCC='';
   setInfo('нет связи',false);
   loadDB();
