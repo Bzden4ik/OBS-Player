@@ -1,0 +1,6 @@
+data.json
+data.backup.json
+plays.json
+state.json
+*.tmp
+.check.js
