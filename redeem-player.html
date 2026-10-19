@@ -27,7 +27,7 @@ svg{width:20px;height:20px;display:block;flex:none}
 #tabs .upd{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--warn);color:var(--ink);display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);animation:pop .5s var(--ease)}
 #tabs .upd svg{width:11px;height:11px;stroke-width:3}
 @media(max-width:340px){#tabs span{display:none}#tabs button:last-child{flex:1;width:auto}}
-main{flex:1;overflow-y:auto;min-height:0;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+main{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:#333 transparent}
 section{display:none;flex-direction:column;gap:8px}
 section.on{display:flex;animation:sw .32s var(--ease)}
 @keyframes sw{from{opacity:0;transform:translateY(10px)}}
@@ -79,7 +79,7 @@ details summary{cursor:pointer;color:var(--mu)}
 .bar{display:flex;gap:8px}.bar button{flex:1;height:36px}
 button.gh{background:transparent;box-shadow:inset 0 0 0 1px var(--ln2)}
 button.gh:hover{background:var(--pill)}
-.np{padding:10px;gap:8px}
+.np{padding:10px;gap:8px;overflow:hidden}
 .pv{position:relative;border-radius:12px;overflow:hidden;background:#111}
 #pvw{display:block;width:100%;aspect-ratio:16/9;border:0;background:#111;transition:filter .35s;pointer-events:none}
 .np.pz #pvw{filter:grayscale(1) brightness(.45)}
@@ -171,8 +171,9 @@ button.gh:hover{background:var(--pill)}
 .pn{display:flex;gap:6px;padding:6px 4px 2px}.pn input{flex:1;padding:6px 10px}
 #box{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,177.78vh);aspect-ratio:16/9;visibility:hidden}
 #box iframe{width:100%;height:100%;border:0;display:block}
-#box{transition:filter .35s}
+#box{transition:filter .35s,opacity .4s}
 #box.pz{filter:grayscale(1) brightness(.45)}
+#box.ao{width:480px;height:270px;aspect-ratio:auto;opacity:0}
 .empty{color:var(--mu);padding:14px 4px}
 .tg{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
 .sw{flex:none;width:42px;height:26px;border-radius:99px;background:var(--pill2);position:relative;cursor:pointer;transition:background .25s}
@@ -241,6 +242,75 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
 .vv input:hover,.vv input:focus{border-color:rgba(255,255,255,.22);background:var(--pill)}
 .vv i{font-style:normal;color:var(--mu);font-size:11px;margin-left:1px}
 .vr.z .ic{color:var(--bad)}.vr.z .kw:after{background:var(--bad)}.vr.z .vv input{color:var(--mu)}
+.aol{padding:8px 2px 4px 4px}
+.dbgp{font-family:var(--mono);font-size:11px;word-break:break-all;user-select:all}.dbgp:empty{display:none}
+#advo svg{width:16px;height:16px}
+body.stg{overflow:auto;font-size:13.5px}
+#st{max-width:1120px;margin:0 auto;padding:22px 24px 60px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px}
+#st header{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--ln)}
+#st .logo{font:400 26px var(--disp);letter-spacing:.02em}
+#st .ttl{font-weight:600;font-size:15px;color:#c8c8cc;margin-right:auto;padding-left:6px}
+#st .saved{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .3s}
+#st .saved.on{opacity:1}#st .saved svg{width:15px;height:15px;color:var(--ok)}
+#st nav{position:sticky;top:18px;align-self:start;display:flex;flex-direction:column;gap:4px}
+#st nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;background:transparent;color:#c8c8cc;font-weight:500}
+#st nav button:hover{background:var(--s1)}#st nav button.on{background:var(--fg);color:var(--ink)}
+#st nav button svg{width:18px;height:18px}
+#st nav .c{margin-left:auto;font:500 11px var(--mono);opacity:.6}
+#st nav .foot{margin-top:14px;padding:12px;border-radius:14px;background:var(--s1);border:1px solid var(--ln);font-size:12px;color:var(--mu);line-height:1.5}
+#st nav .foot b{color:#d6d6d9;font-weight:600}
+#st main{overflow:visible;padding:0;min-height:0}
+#st section{gap:14px}
+#st h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em}
+#st .lead{color:#b9b9bd;margin:-6px 0 4px;max-width:640px;line-height:1.45}
+#st .card{padding:16px;gap:12px}
+#st .note{font-size:12.5px;line-height:1.45;color:#b9b9bd;background:var(--s2);border-radius:12px;padding:9px 12px}
+#st code{font:12px var(--mono);background:var(--in);padding:2px 7px;border-radius:6px;color:#d6d6d9}
+#st .warn button{width:auto;height:30px;margin-top:8px;padding:0 14px}
+#st .lock{display:flex;color:var(--mu)}#st .lock svg{width:15px;height:15px}
+#st .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#st .wide{grid-column:1/-1}
+#st label.lr{cursor:pointer}
+#st .big{position:relative;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:var(--s1);border:1px solid var(--ln);cursor:pointer;transition:border-color .3s}
+#st .big.on{border-color:rgba(61,220,132,.3)}
+#st .big .lt b{font-size:15px}
+#st .big .lt b:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--mu);transition:background .25s,box-shadow .25s}
+#st .big.on .lt b:before{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+#st .mods{display:flex;flex-direction:column;gap:8px}
+#st .mc{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:14px;background:var(--s2);animation:rin .38s var(--ease) both}
+#st .mc .ch{min-height:0}
+#st .who{display:flex;align-items:center;gap:10px;min-width:0}
+#st .who>div{min-width:0}
+#st .who b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#st .who i{font-style:normal;color:var(--mu);font-size:11.5px}
+#st .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;color:var(--ink);flex:none;overflow:hidden}
+#st .av img{width:100%;height:100%;object-fit:cover;display:block;animation:sw .3s var(--ease)}
+#st .rch{display:flex;flex-wrap:wrap;gap:6px}
+#st .rc{height:30px;padding:0 12px;font:500 12px var(--mono);color:var(--mu);background:var(--in);box-shadow:inset 0 0 0 1px var(--ln2);transition:background .22s,color .22s,box-shadow .22s,transform .15s var(--ease)}
+#st .rc:hover{color:var(--fg);background:var(--in);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+#st .rc.on,#st .rc.on:hover{background:var(--fg);color:var(--ink);box-shadow:none}
+#st .allb{height:28px;padding:0 12px;font-size:12px;background:transparent;color:var(--mu);box-shadow:inset 0 0 0 1px var(--ln2);flex:none}
+#st .allb:hover{color:var(--fg);background:var(--pill)}
+#st .legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 18px;font-size:12px;color:var(--mu)}
+#st .legend code{margin-right:6px}
+#st .bl{display:flex;flex-direction:column;gap:8px}
+#st .bu{display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,1.6fr) auto;align-items:center;gap:14px;padding:12px;border-radius:14px;background:var(--s2);animation:rin .38s var(--ease) both;transition:opacity .3s,transform .3s var(--ease)}
+#st .bu.out{opacity:0;transform:translateX(16px)}
+#st .lv{display:flex;align-items:center;gap:10px;min-width:0}
+#st .lv img{width:72px;height:40px;border-radius:8px;object-fit:cover;background:#222;flex:none}
+#st .lv>div{min-width:0}#st .lv b{display:block;font-weight:500;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#st .lv i{font-style:normal;color:var(--mu);font-size:11.5px}
+#st .add{display:flex;gap:8px}#st .add input{flex:1}
+#st .bubble{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:#18181b;max-width:560px}
+#st .bubble .q{color:var(--mu);font-size:12px;border-left:2px solid var(--pill2);padding-left:8px}
+#st .bubble .n1{color:#ff8ad8;font-weight:600}#st .bubble .n2{color:#8ab4ff;font-weight:600}#st .bubble a{color:#bf94ff}
+#st .path{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--in);box-shadow:inset 0 0 0 1px var(--ln2);font:12.5px var(--mono);color:#d6d6d9;word-break:break-all;user-select:all}
+#st .files>div{display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-top:1px solid var(--ln);font-size:12.5px}
+#st .files>div span:first-child{font-family:var(--mono)}
+#st .bar{flex-wrap:wrap}#st .bar button{flex:none;padding:0 16px}
+#st .empty{padding:10px 4px}
+@media(max-width:820px){#st{grid-template-columns:1fr;padding:16px}#st nav{position:static;flex-direction:row;overflow-x:auto}#st nav button{width:auto;white-space:nowrap}#st nav .foot{display:none}
+  #st .grid2,#st .legend{grid-template-columns:1fr}#st .bu{grid-template-columns:1fr auto}#st .bu .lv{grid-column:1/-1;order:3}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <div id="panel">
@@ -255,7 +325,8 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <div class="nm"><div id="nt">Ничего не играет</div><div id="nu"></div></div>
       <div class="pgw" id="npg" hidden><div class="pgb" id="pgb" role="slider" tabindex="0" aria-label="Перемотка трека"><div class="pg"><i></i></div><span class="pgk"></span><span class="pgt" id="pgt"></span></div><div class="tms num"><span id="nt0">0:00</span><span id="nt1">0:00</span></div></div>
       <div class="ctl" id="na"></div>
-      <div class="mix" id="mix"><div id="vc1"></div><div id="vc2"></div></div>
+      <div class="mix" id="mix"><div id="vc1"></div><div id="vc2"></div>
+        <label class="lim aol" title="Видео на стриме скрыто, звук играет как обычно. Превью здесь остаётся"><input type="checkbox" class="tg" id="aud"><span class="sw sm"></span>Только звук — видео на стриме скрыто</label></div>
     </div>
     <div class="sh"><span class="lbl">Очередь</span><span class="num" id="qc"></span></div>
     <div id="ql"></div>
@@ -324,7 +395,13 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <div class="row"><label>Лайк в</label><select id="lkp" style="flex:1"></select></div>
       <div class="lr two"><div class="lt"><b>Трек сыгран</b><i>если проиграно столько или больше. Не доиграл из-за вылета OBS или ПК — баллы вернутся сами</i></div><label class="fld"><input id="pl_pct" inputmode="numeric" autocomplete="off" aria-label="Порог «сыгран», проценты"><i>%</i></label></div>
       <div class="lr"><input type="checkbox" class="tg" id="ord_auto"><label class="sw" for="ord_auto"></label><label class="lt" for="ord_auto"><b>Заказы вместе с OBS</b><i>закрывать при выходе из OBS и открывать при запуске</i></label></div>
-      <div class="hint">Громкость — во вкладке «Сейчас», под кнопками плеера</div>
+      <div class="hint">Громкость и «только звук» — во вкладке «Сейчас», под кнопками плеера</div>
+    </div>
+    <div class="card">
+      <div class="h">Расширенные настройки</div>
+      <div class="sub" id="advi">Заказы в чате (!!play), права модераторов, заблокированные зрители, файлы отладки</div>
+      <button id="advo" class="w"><i data-i="ext"></i>Открыть в браузере</button>
+      <div class="hint">Страница открывается в обычном браузере и OBS не нагружает. Закрой её, когда настроишь — всё продолжит работать</div>
     </div>
     <div class="card">
       <div class="ch"><div class="h" id="apn">Bzden4ik Player</div><span class="stat" id="aps"></span></div>
@@ -334,8 +411,9 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
       <button id="aprel" class="lnk">Все версии на GitHub</button>
     </div>
     <div class="card"><div class="h">Отладка</div><div id="lg"></div><pre id="dp"></pre>
-      <div class="row"><button id="dcp">Копировать</button><button id="dcl">Очистить лог</button></div>
-      <div class="help"><b>Нужна помощь или нашли проблему?</b><span>Напиши в Telegram-канал и приложи текст отладки — кнопка «Копировать» выше.</span><button id="tgk" class="w">Telegram · @vtuberstand</button></div>
+      <div class="row"><button id="dcp">Копировать</button><button id="dcl">Очистить лог</button><button id="dsv">Сохранить файл</button></div>
+      <div class="hint dbgp" id="dbgp"></div>
+      <div class="help"><b>Нужна помощь или нашли проблему?</b><span>Напиши в Telegram-канал и приложи файл отладки — кнопка «Сохранить файл» выше. Модератор может сохранить его командой !!help в чате, если ты дал ему это право.</span><button id="tgk" class="w">Telegram · @vtuberstand</button></div>
       <div class="hint">История и плейлисты хранятся в data.json рядом с server.js</div></div>
   </section>
   </main>
@@ -343,6 +421,87 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
 <div id="toast"></div>
 <div id="pop" role="menu"></div>
 <div id="box"><div id="yt"></div></div>
+<template id="stT"><div id="st">
+  <header><span class="logo">Bzden4ik</span><span class="ttl">Расширенные настройки</span>
+    <span class="saved" id="sv"><i data-i="check"></i>Сохранено — панель в OBS уже знает</span>
+    <span class="pill" id="pt">twitch</span><span class="pill" id="pp">панель в OBS</span></header>
+  <nav id="snav">
+    <button data-s="play" class="on"><i data-i="play"></i>Заказы в чате</button>
+    <button data-s="mods"><i data-i="shield"></i>Модераторы<span class="c" id="nm"></span></button>
+    <button data-s="bans"><i data-i="ban"></i>Заблокированные<span class="c" id="nb"></span></button>
+    <button data-s="chat"><i data-i="chat"></i>Ответы в чате</button>
+    <button data-s="dbg"><i data-i="file"></i>Отладка</button>
+    <div class="foot"><b>Эта страница не нагружает OBS.</b> Она открыта в обычном браузере. Закрой её, когда настроишь: команды и заказы работают в панели OBS и без неё.</div>
+  </nav>
+  <main>
+    <div class="warn" id="wpan" hidden>Панель в OBS сейчас не на связи. Изменения сохранятся и заработают, как только она запустится.</div>
+    <div class="warn" id="wsc" hidden></div>
+    <section id="s-play" class="on">
+      <h2>Заказы в чате</h2>
+      <p class="lead">Зрители заказывают командой <code>!!play ссылка</code>. Заказ проходит те же проверки, что и награда за баллы: бан-лист, запрещённые слова, длительность, повторы (они — в панели OBS, ⚙ → «Ограничения»).</p>
+      <label class="big" id="pbig"><input type="checkbox" class="tg" id="p_on"><span class="sw"></span><span class="lt"><b>Заказы командой !!play</b><i id="pwhy">Зрители заказывают треки командой в чате</i></span></label>
+      <div class="warn" id="pcl" hidden><span></span><br><button class="w" id="pclb">Открыть заказы</button></div>
+      <div class="card">
+        <div class="ch"><div class="h">Кто может заказывать</div><span class="hint">остальным панель молча не отвечает</span></div>
+        <div class="grid2">
+          <div class="lr"><input type="checkbox" class="tg" checked disabled><span class="sw"></span><span class="lt"><b>Стример</b><i>всегда, без ограничений</i></span><span class="lock"><i data-i="lock"></i></span></div>
+          <label class="lr"><input type="checkbox" class="tg" data-p="mod"><span class="sw"></span><span class="lt"><b>Модераторы</b><i>без лимита очереди</i></span></label>
+          <label class="lr"><input type="checkbox" class="tg" data-p="vip"><span class="sw"></span><span class="lt"><b>VIP</b><i>значок VIP в чате</i></span></label>
+          <label class="lr" id="psub"><input type="checkbox" class="tg" data-p="sub"><span class="sw"></span><span class="lt"><b>Подписчики</b><i id="psubi">платная подписка или подписка Prime</i></span></label>
+          <div class="lr wide"><input type="checkbox" class="tg" data-p="fol" id="p_fol"><label class="sw" for="p_fol"></label><label class="lt" for="p_fol"><b>Фоловеры</b><i>подписаны на канал не меньше, чем</i></label><label class="fld"><input id="p_days" inputmode="numeric" maxlength="4" aria-label="Дней с подписки"><i>дней</i></label></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="h">Защита от спама</div>
+        <div class="lr" style="grid-template-columns:minmax(0,1fr) auto"><div class="lt"><b>Треков в очереди от одного зрителя</b><i>следующий заказ — когда один из его треков доиграет. Стримера и модераторов не касается</i></div><label class="fld"><input id="p_per" inputmode="numeric" maxlength="2" aria-label="Треков от одного зрителя"><i>шт.</i></label></div>
+        <div class="note">В чате: <code>!!play https://youtu.be/dQw4w9WgXcQ</code> → трек встаёт в очередь, зритель получает ответ «принято, №2 в очереди». Не прошёл проверку — получает причину.</div>
+      </div>
+    </section>
+    <section id="s-mods">
+      <h2>Модераторы</h2>
+      <p class="lead">Список приходит с Twitch. По умолчанию модераторам ничего не доступно — включи нужные команды каждому. Стример может всё. Права работают, только пока у человека есть значок модератора.</p>
+      <div class="card">
+        <div class="ch"><div class="h">Права на команды</div><button class="allb" id="mref">Обновить список</button></div>
+        <div class="mods" id="ml"></div>
+        <div class="legend" id="leg"></div>
+      </div>
+    </section>
+    <section id="s-bans">
+      <h2>Заблокированные зрители</h2>
+      <p class="lead">Им нельзя заказывать треки: <code>!!play</code> не принимается, а за награду баллы сразу возвращаются. Сюда попадают командой <code>!!ban ник</code> или вручную.</p>
+      <div class="card">
+        <div class="add"><input placeholder="Ник на Twitch" id="bnick" maxlength="26" autocomplete="off"><button class="w" id="badd">Заблокировать</button></div>
+        <div class="bl" id="bll"></div>
+      </div>
+    </section>
+    <section id="s-chat">
+      <h2>Ответы в чате</h2>
+      <p class="lead">Панель пишет в чат от имени стримера. Если в панели выключены «Сообщения в чат» (⚙ → Twitch), ответы не отправляются.</p>
+      <div class="warn" id="cwr" hidden>В панели выключены «Сообщения в чат» — ответы сейчас не отправляются. Включи их в панели OBS: ⚙ → Twitch.</div>
+      <label class="big" id="abig"><input type="checkbox" class="tg" id="a_on"><span class="sw"></span><span class="lt"><b>Отвечать на «что за трек?»</b><i>когда в чате спрашивают про трек, а сейчас что-то играет. Ничего не играет — молчит. На один трек — не чаще раза в 30 секунд</i></span></label>
+      <div class="card">
+        <div class="h">Как это выглядит в чате</div>
+        <div class="bubble"><div><span class="n2">kotik_228</span>: а что за трек играет?</div><div class="q">↳ ответ на сообщение kotik_228</div>
+          <div><span class="n1 chn">Стример</span>: Сейчас играет: Rick Astley — Never Gonna Give You Up — <a>https://youtu.be/dQw4w9WgXcQ</a> · заказал nekomod</div></div>
+      </div>
+      <div class="card">
+        <div class="h">Ответ на <code>!!help</code></div>
+        <div class="bubble"><div><span class="n1 chn">Стример</span>: Помощь по плееру: <a>https://t.me/vtuberstand</a></div></div>
+        <span class="hint">Больше в чат ничего не пишется. Файл отладки сохраняется у стримера молча — см. «Отладка».</span>
+      </div>
+    </section>
+    <section id="s-dbg">
+      <h2>Отладка</h2>
+      <p class="lead">Если что-то не так — отправь последний файл в Telegram-канал. В файле нет токена Twitch и ключа YouTube.</p>
+      <div class="card">
+        <div class="ch"><div class="h">Последний файл</div><span class="hint" id="dwhy"></span></div>
+        <div class="path" id="dpath">Файлов пока нет</div>
+        <div class="bar"><button class="w" id="dnew">Сохранить сейчас</button><button class="gh" id="dshow">Показать в папке</button><button class="gh" id="dcopy">Копировать путь</button><button class="gh" id="dtg">Telegram · @vtuberstand</button></div>
+      </div>
+      <div class="card"><div class="h">Все файлы <span class="hint">(хранятся последние 10)</span></div><div class="files" id="dfl"></div></div>
+    </section>
+  </main>
+</div></template>
 <script>
 const $=id=>document.getElementById(id);
 const view=new URLSearchParams(location.search).get('view')==='player';
@@ -358,7 +517,7 @@ function dbg(k,v){
 addEventListener('error',e=>dbg('ОШИБКА JS',e.message+' (строка '+e.lineno+')'));
 addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.reason)));
 const KEY='ytq-cfg',LIKES='❤ Лайки';
-const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true};
+const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
@@ -369,10 +528,47 @@ function send(m){m.n=Math.random().toString(36).slice(2)+Date.now();seen.add(m.n
 if(ch)ch.onmessage=e=>recv(e.data);
 addEventListener('storage',e=>{if(e.key==='ytq-msg'&&e.newValue)try{recv(JSON.parse(e.newValue))}catch(x){}});
 function yid(s){s=(s||'').trim();const m=s.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/|v\/))([\w-]{11})/)||s.match(/^([\w-]{11})$/);return m?m[1]:null}
+const VID=/^[\w-]{11}$/;
+const SETV=new URLSearchParams(location.search).get('view')==='settings';
+const PANEL=!view&&!SETV;
+const P={
+  note:'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  clock:'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2',
+  list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+  heart:'M12 21s-8-5-9.5-10A5 5 0 0 1 12 6a5 5 0 0 1 9.5 5C20 16 12 21 12 21z',
+  link:'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
+  plus:'M4 6h11M4 11h11M4 16h6M17 14v6M14 17h6',
+  skip:'M5 5l10 7-10 7zM19 5v14',
+  skp2:'M3 5l7 7-7 7zM11 5l7 7-7 7zM21 5v14',
+  menu:'M4 6h16M4 12h16M4 18h16',
+  ban:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.6 5.6l12.8 12.8',
+  trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
+  undo:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
+  play:'M7 4l13 8-13 8z',
+  next:'M4 6h9M4 12h6M4 18h9M15 11l6 4-6 4z',
+  shuf:'M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5',
+  check:'M5 12l5 5 9-10',
+  x:'M6 6l12 12M18 6L6 18',
+  pause:'M6.5 5h3v14h-3zM14.5 5h3v14h-3z',
+  vol:'M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
+  mute:'M11 5L6 9H3v6h3l5 4zM22 9l-6 6M16 9l6 6',
+  minus:'M5 12h14',
+  inc:'M12 5v14M5 12h14',
+  ext:'M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6',
+  dl:'M12 4v11M7 10l5 5 5-5M5 20h14',
+  shield:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  chat:'M4 5h16v11H9l-5 4z',
+  file:'M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h5',
+  lock:'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  sliders:'M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6'
+};
+const ico=(n,f)=>'<svg viewBox="0 0 24 24" fill="'+(f?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let pollLast=null;
 async function poll(){
   try{
-    const r=await fetch('/poll'+(pollLast===null?'':'?after='+pollLast),{cache:'no-store'});
+    const r=await fetch('/poll?'+(pollLast===null?'':'after='+pollLast)+(PANEL?'&p=1':''),{cache:'no-store'});
     if(r.status===404)throw new Error('404: на сервере старый server.js, перезапусти его');
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();pollLast=j.last;
@@ -419,8 +615,9 @@ if(view&&ME){
   dbg('JS','работает');dbg('URL',location.href);dbg('BroadcastChannel',ch?'есть':'нет');dbg('YT API','загружается…');
   let yt=null,ready=false,q=[],cur=null,paused=false,ap=null,pn=0;
   const box=$('box');
+  let ao=false;const aoSet=v=>{ao=!!v;box.classList.toggle('ao',ao)};aoSet(C.audio);
   const st=()=>{box.classList.toggle('pz',!!(paused&&cur));let title='',tm=0,du=0;try{if(cur&&ready){title=(yt.getVideoData()||{}).title||'';tm=Math.floor(yt.getCurrentTime()||0);du=Math.floor(yt.getDuration()||0)}}catch(e){}
-    send({t:'st',yt:ready?1:0,pa:paused?1:0,cur:cur?cur.id:null,ck:cur?cur.k:null,q:q.length,
+    send({t:'st',yt:ready?1:0,pa:paused?1:0,ao:ao?1:0,cur:cur?cur.id:null,ck:cur?cur.k:null,q:q.length,
       ql:q.map(x=>x.pl?{pl:1,k:x.k,name:x.name,n:x.items.length}:{id:x.id,u:x.u,k:x.k}),
       ap:ap?{k:ap.k,name:ap.name,pos:ap.pos,n:ap.items.length}:null,pk:cur&&cur.pk||null,cu:cur&&cur.u||'',ct:cur&&cur.t||'',title,tm,du,cut:cur&&cur.cut||0})};
   function pick(){
@@ -460,6 +657,7 @@ if(view&&ME){
     else if(m.t==='pause'){if(ready&&cur){paused=true;try{yt.pauseVideo()}catch(e){}st()}}
     else if(m.t==='resume'){if(ready&&cur){paused=false;try{yt.playVideo()}catch(e){}st()}}
     else if(m.t==='seek'){if(ready&&cur){try{yt.seekTo(Math.max(0,+m.s||0),true)}catch(e){}setTimeout(st,400)}}
+    else if(m.t==='vis'){aoSet(m.a);st()}
   };
   window.onYouTubeIframeAPIReady=()=>{
     if(yt)return;
@@ -476,6 +674,156 @@ if(view&&ME){
   loadYT();
   setInterval(st,3000);
   setInterval(()=>{try{if(ready&&cur&&cur.started&&cur.cut&&yt.getCurrentTime()>=cur.cut){send({t:'done',k:cur.k});next()}}catch(e){}},500);
+}else if(SETV){
+  $('panel').remove();$('box').remove();
+  document.body.className='stg';document.title='Расширенные настройки · Bzden4ik Player';
+  document.body.prepend($('stT').content.cloneNode(true));
+  document.querySelectorAll('#st i[data-i]').forEach(i=>i.innerHTML=ico(i.dataset.i));
+  const CMD=[['skip','!!skip','пропустить трек'],['ban','!!ban','трек в бан и пропустить'],['skipback','!!skipback','пропустить и вернуть баллы'],
+    ['banu','!!ban ник','заблокировать зрителя'],['unban','!!unban ник','разблокировать зрителя'],['stop','!!stop','пауза / продолжить'],
+    ['vol','!!volume','громкость для зрителей 0–100'],['off','!!off / !!on','закрыть или открыть заказы'],['help','!!help','ссылка на помощь + файл отладки']];
+  const COL=['#ff8ad8','#8ab4ff','#3ddc84','#e0b050','#bf94ff','#ff9a62','#5ad1e6','#f4f4f1'];
+  const col=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return COL[Math.abs(h)%COL.length]};
+  const fd=ts=>new Date(ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const SL={queued:'в очереди',playing:'играет',played:'сыграно',skipped:'пропущено',removed:'убрано из очереди',banned:'в бане',rejected:'отклонено',checking:'проверка',lost:'не доиграл'};
+  let A=null,HIST=[],DF=null,tt=0,svT=0;
+  const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2200)};
+  const saved=()=>{const s=$('sv');s.classList.add('on');clearTimeout(svT);svT=setTimeout(()=>s.classList.remove('on'),1800)};
+  async function op(o,ok){
+    try{const r=await fetch('/adv',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify(o)});if(!r.ok)throw new Error(r.status);saved();if(ok)toast(ok);await loadA();return true}
+    catch(e){toast('Не сохранилось — сервер плеера не отвечает');await loadA();return false}
+  }
+  const POST=(p,b)=>fetch(p,{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify(b||{})});
+  document.querySelectorAll('#snav button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#snav button').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('#st section').forEach(s=>s.classList.toggle('on',s.id==='s-'+b.dataset.s));scrollTo({top:0})});
+  $('p_on').onchange=e=>op({op:'play',on:e.target.checked},e.target.checked?'Заказы командой !!play включены':'Заказы командой !!play выключены');
+  document.querySelectorAll('#s-play [data-p]').forEach(i=>i.onchange=()=>op({op:'play',[i.dataset.p]:i.checked}));
+  $('pclb').onclick=()=>op({op:'closed',v:false},'Заказы открыты');
+  [['p_days','days',0,3650],['p_per','per',1,50]].forEach(([id,k,lo,hi])=>{
+    const el=$(id),commit=()=>{const v=+el.value.replace(/\D/g,'');
+      if(el.value===''||!(v>=lo&&v<=hi)){el.value=A?A.play[k]:'';if(el.value!=='')toast('Можно от '+lo+' до '+hi);return}
+      if(A&&v!==A.play[k])op({op:'play',[k]:v})};
+    el.oninput=()=>{el.value=el.value.replace(/\D/g,'')};el.onblur=commit;el.onkeydown=e=>{if(e.key==='Enter')el.blur()};
+  });
+  $('leg').innerHTML=CMD.map(c=>'<div><code>'+esc(c[1])+'</code>'+esc(c[2])+'</div>').join('');
+  $('mref').onclick=()=>{send({t:'adv-ref'});toast('Прошу панель обновить список модераторов')};
+  const mcnt=r=>Object.keys(r).length+' из '+CMD.length+' команд';
+  function mCard(m){
+    const d=document.createElement('div');d.className='mc';d.dataset.id=m.id;
+    d.innerHTML='<div class="ch"><div class="who"><span class="av"></span><div><b></b><i></i></div></div><button class="allb"></button></div><div class="rch">'+
+      CMD.map(c=>'<button class="rc" data-c="'+c[0]+'" title="'+esc(c[2])+'">'+esc(c[1])+'</button>').join('')+'</div>';
+    d.querySelector('.av').style.background=col(m.login);
+    d.querySelector('b').textContent=m.name||m.login;
+    d.addEventListener('animationend',()=>{d.style.animation='none'},{once:true});
+    d.onclick=e=>{
+      const r={...((A.rights||{})[m.id]||{})},b=e.target.closest('.rc');
+      if(b){const v=!r[b.dataset.c];paintM(d,{...r,[b.dataset.c]:v?1:undefined});op({op:'right',id:m.id,cmds:{[b.dataset.c]:v}});return}
+      if(e.target.closest('.allb')){const v=!CMD.every(c=>r[c[0]]),cmds={};CMD.forEach(c=>cmds[c[0]]=v);paintM(d,v?Object.fromEntries(CMD.map(c=>[c[0],1])):{});op({op:'right',id:m.id,cmds})}
+    };
+    return d;
+  }
+  const avOf=id=>id&&A.ctx&&A.ctx.av?A.ctx.av[id]||'':'';
+  function paintAv(el,url,name){
+    if(el.dataset.u===url&&el.childNodes.length)return;el.dataset.u=url;el.textContent='';
+    const letter=(name||'?')[0].toUpperCase();
+    if(!url){el.textContent=letter;return}
+    const i=document.createElement('img');i.alt='';i.referrerPolicy='no-referrer';i.src=url;i.onerror=()=>{i.remove();el.textContent=letter};el.append(i);
+  }
+  function paintM(d,r){
+    r=Object.fromEntries(Object.entries(r).filter(([,v])=>v));
+    d.querySelectorAll('.rc').forEach(b=>{const v=!!r[b.dataset.c];b.classList.toggle('on',v);b.setAttribute('aria-pressed',v)});
+    d.querySelector('.who i').textContent=mcnt(r);d.querySelector('.allb').textContent=CMD.every(c=>r[c[0]])?'Снять все':'Включить все';
+  }
+  function syncMods(){
+    const box=$('ml'),mods=A.ctx?A.ctx.mods:null;
+    $('nm').textContent=mods&&mods.length?mods.length:'';
+    if(!mods||!mods.length){box.innerHTML='<div class="hint empty">'+(!A.ctx?'Панель в OBS ещё не подключалась к Twitch — список модераторов появится, когда она подключится.':'На канале нет модераторов. Назначь их на Twitch (/mod ник) и нажми «Обновить список».')+'</div>';return}
+    box.querySelector('.empty')&&box.querySelector('.empty').remove();
+    const want=new Set(mods.map(m=>m.id));
+    box.querySelectorAll('.mc').forEach(d=>{if(!want.has(d.dataset.id))d.remove()});
+    mods.forEach((m,i)=>{let d=box.querySelector('.mc[data-id="'+m.id+'"]');if(!d){d=mCard(m);d.style.animationDelay=Math.min(i,8)*40+'ms'}box.append(d);paintM(d,(A.rights||{})[m.id]||{});paintAv(d.querySelector('.av'),avOf(m.id),m.name||m.login)});
+  }
+  const lastOrder=b=>HIST.find(e=>(b.id&&e.uid===b.id)||(e.ul&&e.ul.toLowerCase()===b.login)||(!e.ul&&String(e.u||'').toLowerCase()===b.login));
+  function bRow(b){
+    const d=document.createElement('div');d.className='bu';d.dataset.l=b.login;
+    d.innerHTML='<div class="who"><span class="av"></span><div><b></b><i></i></div></div><div class="lv"></div><button class="gh">Разбанить</button>';
+    d.querySelector('.av').style.background=col(b.login);
+    d.querySelector('b').textContent=b.name||b.login;d.querySelector('.who i').textContent='заблокировал '+(b.by||'?')+' · '+fd(b.at);
+    d.addEventListener('animationend',()=>{d.style.animation='none'},{once:true});
+    d.querySelector('button').onclick=async()=>{d.classList.add('out');if(!(await op({op:'unban',login:b.login},(b.name||b.login)+' может снова заказывать')))d.classList.remove('out')};
+    return d;
+  }
+  function paintLast(d,b){
+    const lv=d.querySelector('.lv'),e=lastOrder(b),key=e?e.k+e.s:'-';
+    if(lv.dataset.k===key)return;lv.dataset.k=key;lv.textContent='';
+    if(!e){const i=document.createElement('i');i.textContent='заказов не было';lv.append(i);return}
+    if(VID.test(e.id||'')){const im=document.createElement('img');im.alt='';im.loading='lazy';im.src='https://i.ytimg.com/vi/'+e.id+'/mqdefault.jpg';im.onerror=()=>{im.style.visibility='hidden'};lv.append(im)}
+    const w=document.createElement('div'),a=document.createElement('i'),t=document.createElement('b'),s=document.createElement('i');
+    a.textContent='последний заказ'+(e.src==='chat'?' (!!play)':'');t.textContent=e.t||e.id||'(без названия)';t.title=t.textContent;
+    s.textContent=(SL[e.s]||e.s)+(e.r?' ('+e.r+')':'')+' · '+fd(e.ts);w.append(a,t,s);lv.append(w);
+  }
+  function syncBans(){
+    const box=$('bll'),bans=A.bans||[];$('nb').textContent=bans.length||'';
+    if(!bans.length){if(!box.querySelector('.empty'))box.innerHTML='<div class="hint empty">Никто не заблокирован</div>';return}
+    box.querySelector('.empty')&&box.querySelector('.empty').remove();
+    const want=new Set(bans.map(b=>b.login));
+    box.querySelectorAll('.bu').forEach(d=>{if(!want.has(d.dataset.l)){d.classList.add('out');setTimeout(()=>d.remove(),280)}});
+    let prev=null;
+    bans.forEach(b=>{let d=box.querySelector('.bu[data-l="'+b.login+'"]:not(.out)');
+      if(!d){d=bRow(b);if(prev)prev.after(d);else box.prepend(d)}
+      paintLast(d,b);paintAv(d.querySelector('.av'),avOf(b.id),b.name||b.login);prev=d});
+  }
+  $('badd').onclick=async()=>{
+    const l=$('bnick').value.trim().replace(/^@/,'').toLowerCase();
+    if(!/^[a-z0-9_]{1,25}$/.test(l)){toast('Ник — латиница, цифры и _');return}
+    if(await op({op:'ban',login:l,name:l,by:'вручную'},l+' больше не может заказывать'))$('bnick').value='';
+  };
+  $('bnick').onkeydown=e=>{if(e.key==='Enter')$('badd').click()};
+  $('a_on').onchange=e=>op({op:'ask',v:e.target.checked},e.target.checked?'Буду отвечать на «что за трек?»':'Не отвечаю на «что за трек?»');
+  let dReq=0;
+  $('dnew').onclick=()=>{
+    dReq=Date.now();const n0=DF&&DF.files[0]?DF.files[0].name:'';send({t:'dbg-save',why:'кнопка в расширенных настройках'});toast('Сохраняю…');
+    setTimeout(async()=>{await loadD();if((DF&&DF.files[0]?DF.files[0].name:'')===n0)POST('/debug',{text:'(панель в OBS не ответила — здесь только данные сервера)',why:'кнопка в расширенных настройках'}).then(loadD)},4000);
+  };
+  $('dshow').onclick=()=>{const f=DF&&DF.files[0];if(!f){toast('Файлов пока нет');return}POST('/debug/show',{name:f.name}).then(r=>toast(r.ok?'Открываю папку':'Файл не найден'))};
+  $('dcopy').onclick=()=>{const f=DF&&DF.files[0];if(!f){toast('Файлов пока нет');return}const p=DF.dir+'\\'+f.name;
+    const fb=()=>{const a=document.createElement('textarea');a.value=p;document.body.append(a);a.select();try{document.execCommand('copy');toast('Путь скопирован')}catch(e){}a.remove()};
+    try{navigator.clipboard.writeText(p).then(()=>toast('Путь скопирован'),fb)}catch(e){fb()}};
+  $('dtg').onclick=()=>window.open('https://t.me/vtuberstand','_blank','noopener');
+  function syncD(){
+    const f=DF&&DF.files[0];
+    $('dpath').textContent=f?DF.dir+'\\'+f.name:'Файлов пока нет';$('dwhy').textContent=f?(f.why||'')+' · '+fd(f.at):'';
+    $('dfl').innerHTML=DF&&DF.files.length?DF.files.map(x=>'<div><span>'+esc(x.name)+'</span><span class="hint">'+esc(x.why||'')+'</span></div>').join(''):'<div class="hint empty">Пока ни одного</div>';
+    if(dReq&&f&&f.at>=dReq-1000){dReq=0;toast('Файл отладки сохранён')}
+  }
+  function syncAll(){
+    const P=A.play,c=A.ctx,ty=c&&c.chan?c.chan.type:null;
+    const setC=(el,v)=>{if(el.checked!==!!v)el.checked=!!v};
+    setC($('p_on'),P.on);$('pbig').classList.toggle('on',!!P.on);
+    document.querySelectorAll('#s-play [data-p]').forEach(i=>setC(i,P[i.dataset.p]));
+    [['p_days','days'],['p_per','per']].forEach(([id,k])=>{if(document.activeElement!==$(id))$(id).value=P[k]});
+    $('pwhy').textContent=ty===''?'Канал без статуса компаньона — наград за баллы нет, поэтому заказы идут через чат'
+      :ty?'Работает вместе с наградой за баллы — зрители выбирают, как заказать':'Зрители заказывают треки командой в чате';
+    const noSub=ty==='';$('psub').querySelector('input').disabled=noSub;
+    $('psubi').textContent=noSub?'подписки есть только у компаньонов и партнёров Twitch':'платная подписка или подписка Prime';
+    $('pcl').hidden=!A.closed;if(A.closed)$('pcl').querySelector('span').textContent='Заказы закрыты командой !!off ('+(A.closed.by||'?')+', '+fd(A.closed.at)+'): !!play не принимается, награда скрыта.';
+    setC($('a_on'),A.ask);$('abig').classList.toggle('on',!!A.ask);
+    $('cwr').hidden=!(c&&!c.write);
+    document.querySelectorAll('#st .chn').forEach(x=>x.textContent=c&&c.chan&&c.chan.name||'Стример');
+    const pt=$('pt');pt.textContent=c&&c.chan&&c.chan.name?'twitch · '+c.chan.name:'twitch не подключён';pt.className='pill '+(c&&c.chan&&c.chan.id?'ok':'bad');
+    const pp=$('pp');pp.className='pill '+(A.panel?'ok':'bad');$('wpan').hidden=!!A.panel;
+    const w=$('wsc'),need=c&&c.need||[],cerr=c&&c.chat&&c.chat!=='ok'&&c.chat!=='подключаюсь…'?c.chat:'';
+    w.hidden=!(need.length||cerr);
+    w.textContent=need.length?'Панели нужны новые права Twitch: '+need.join(', ')+'. Нажми «Обновить» в панели OBS (⚙ → Twitch) — Twitch спросит разрешение один раз.':cerr?'Чат: '+cerr:'';
+    syncMods();syncBans();
+  }
+  async function loadA(){try{const r=await fetch('/adv',{cache:'no-store'});if(!r.ok)throw 0;A=await r.json();syncAll()}catch(e){$('pp').className='pill bad';$('wpan').hidden=false}}
+  async function loadH(){try{const j=await(await fetch('/data',{cache:'no-store'})).json();HIST=Array.isArray(j.hist)?j.hist:[];if(A)syncBans()}catch(e){}}
+  async function loadD(){try{DF=await(await fetch('/debug',{cache:'no-store'})).json();syncD()}catch(e){}}
+  onmsg=m=>{if(m.t==='adv')loadA().then(loadH);else if(m.t==='dbg')loadD()};
+  loadA().then(loadH);loadD();
+  setInterval(loadA,5000);setInterval(loadH,30000);
 }else{
   $('box').style.display='none';
   dbg('Панель','работает');
@@ -489,36 +837,7 @@ if(view&&ME){
     history.replaceState(null,'',location.pathname);
   }
   else if(qe)history.replaceState(null,'',location.pathname);
-  const P={
-    note:'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
-    clock:'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2',
-    list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-    gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
-    heart:'M12 21s-8-5-9.5-10A5 5 0 0 1 12 6a5 5 0 0 1 9.5 5C20 16 12 21 12 21z',
-    link:'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
-    plus:'M4 6h11M4 11h11M4 16h6M17 14v6M14 17h6',
-    skip:'M5 5l10 7-10 7zM19 5v14',
-    skp2:'M3 5l7 7-7 7zM11 5l7 7-7 7zM21 5v14',
-    menu:'M4 6h16M4 12h16M4 18h16',
-    ban:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.6 5.6l12.8 12.8',
-    trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
-    undo:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
-    play:'M7 4l13 8-13 8z',
-    next:'M4 6h9M4 12h6M4 18h9M15 11l6 4-6 4z',
-    shuf:'M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5',
-    check:'M5 12l5 5 9-10',
-    x:'M6 6l12 12M18 6L6 18',
-    pause:'M6.5 5h3v14h-3zM14.5 5h3v14h-3z',
-    vol:'M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
-    mute:'M11 5L6 9H3v6h3l5 4zM22 9l-6 6M16 9l6 6',
-    minus:'M5 12h14',
-    inc:'M12 5v14M5 12h14',
-    ext:'M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6',
-    dl:'M12 4v11M7 10l5 5 5-5M5 20h14'
-  };
-  const ico=(n,f)=>'<svg viewBox="0 0 24 24" fill="'+(f?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
   document.querySelectorAll('i[data-i]').forEach(i=>i.innerHTML=ico(i.dataset.i));
-  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const url=id=>'https://youtu.be/'+id;
   const lg=$('lg');
   const log=t=>{const d=document.createElement('div'),m=document.createElement('time');m.textContent=new Date().toLocaleTimeString('ru-RU');d.append(m,t);lg.prepend(d);while(lg.children.length>30)lg.lastChild.remove()};
@@ -538,6 +857,8 @@ if(view&&ME){
     if(s(d)===s(t))return 'Сегодня';if(s(d)===s(y))return 'Вчера';
     return d.toLocaleDateString('ru-RU',d.getFullYear()===t.getFullYear()?{day:'numeric',month:'long'}:{day:'numeric',month:'long',year:'numeric'})};
   const rk=()=>Math.random().toString(36).slice(2,10);
+  let ADV={rev:0,play:{on:false,mod:true,vip:true,sub:true,fol:true,days:14,per:2},ask:true,closed:null,rights:{},bans:[],ctx:null};
+  const needChat=()=>!!(ADV.play.on||Object.keys(ADV.rights||{}).length||(ADV.ask&&C.chat_on));
   let DB2={hist:[],pl:{[LIKES]:[]}},dbOk=false;
   const TT={};
   let sv=null;
@@ -847,13 +1168,13 @@ if(view&&ME){
     appUI();clearTimeout(apT);apT=setTimeout(appPoll,app&&UPB.includes(app.stage)?1000:60000);
   }
   function appUI(){
-    const nb=!!(app&&!app.edition&&app.newer&&app.latest&&!UPB.includes(app.stage)&&app.stage!=='done'),gb=document.querySelector('#tabs button[data-t="set"]');
+    const nb=!!(app&&app.newer&&app.latest&&!UPB.includes(app.stage)&&app.stage!=='done'),gb=document.querySelector('#tabs button[data-t="set"]');
     $('updb').hidden=!nb;gb.title=nb?'Настройки · доступна версия '+app.latest.version:'Настройки';gb.setAttribute('aria-label',gb.title);
     const s=$('aps'),v=$('apv'),u=$('apu'),g=$('apg'),c=$('apc'),st=(t,k)=>{s.textContent=t;s.className='stat '+(k||'');s.hidden=!t},say=t=>{u.textContent=t;u.hidden=!t};
     if(!app){st('нет связи','bad');v.textContent='Сервер не ответил';say('');g.hidden=c.hidden=true;return}
     $('apn').textContent=app.name;
-    if(app.edition){v.textContent='';const b=el('span','ed');b.textContent=app.edition;v.append('Личная сборка',b);st('');say('');g.hidden=c.hidden=true;$('aprel').hidden=true;return}
-    v.textContent='Версия '+app.version;c.hidden=false;c.textContent=app.newer?'Проверить':'Проверить обновления';
+    v.textContent='Версия '+app.version;if(app.edition){const b=el('span','ed');b.textContent=app.edition;v.append(b)}
+    $('aprel').hidden=!!app.edition;c.hidden=false;c.textContent=app.newer?'Проверить':'Проверить обновления';
     const busy=UPB.includes(app.stage),L=app.latest;
     g.hidden=!app.newer||busy;c.hidden=busy;g.textContent='Обновить';g.classList.remove('arm');
     if(busy){st('обновление','wait');say(app.msg);return}
@@ -951,9 +1272,12 @@ if(view&&ME){
       if(d){e.preventDefault();put(get()+d*(e.shiftKey?5:1));inp.value=get()}};
     inp.onblur=()=>{keep();paint()};
     paint();
+    return{set:v=>{put(v);keep()}};
   }
-  volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители','vol','vol');
+  const volV=volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители','vol','vol');
   volCtl($('vc2'),'Мне','Громкость копии плеера только для тебя (источник с role=me)','volMe','volMe');
+  const aud=$('aud');let aoT=0;aud.checked=!!C.audio;
+  aud.onchange=()=>{C.audio=aud.checked;saveC();aoT=Date.now();send({t:'vis',a:C.audio?1:0});toast(C.audio?'На стриме только звук':'Видео снова на стриме')};
   $('lkp').onchange=e=>{C.likePl=e.target.value;saveC();renderAll()};
   $('hq').oninput=()=>{hn=40;renderHist()};
   $('pp').onclick=()=>playPl(curPl,false);
@@ -981,8 +1305,12 @@ if(view&&ME){
     if(m.t==='st'){const gap=Date.now()-last;last=Date.now();
       if(m.yt===0){if(!ytNo||gap>10000)ytNo=Date.now()}else ytNo=0;
       const yb=ytBad();setInfo(yb?'на связи, но YouTube в плеере не загружается':'на связи · в очереди '+m.q,!yb);
+      if('ao' in m&&!!m.ao!==!!C.audio&&Date.now()-aoT>5000){aoT=Date.now();send({t:'vis',a:C.audio?1:0})}
       showNow(m);if(!stSeen){stSeen=true;setTimeout(tryRec,800)}}
     else if(m.t==='done'&&m.k)prg[m.k]=1;
+    else if(m.t==='adv')advLoad();
+    else if(m.t==='adv-ref')postCtx(true);
+    else if(m.t==='dbg-save')saveDbg(String(m.why||'кнопка в расширенных настройках').slice(0,80));
     else if(m.t==='err'){
       const why=PERR[m.code]||'ошибка YouTube (код '+m.code+')',e=m.k&&hget(m.k);
       log('Ошибка плеера '+m.code+(m.id?' ('+m.id+')':'')+': '+why);
@@ -994,6 +1322,8 @@ if(view&&ME){
     153:'YouTube отклонил запрос плеера'};
   setInterval(()=>{if(Date.now()-last>7000)setInfo('нет связи',false)},2000);
   function showNow(m){
+    if(m.cur!=null&&!VID.test(m.cur))return;
+    m.tm=Math.max(0,Math.floor(+m.tm||0));
     const f=$('pvw'),fresh=m.cur!==now.id||m.ck!==now.k;
     if(m.ck&&m.pk&&dbOk&&!hget(m.ck))hadd({k:m.ck,id:m.cur,u:m.cu||'плейлист',ts:Date.now(),t:m.ct||m.title||TT[m.cur]||'',s:'playing',pl:1});
     if(m.cur!==now.id||m.ck!==now.k){
@@ -1173,24 +1503,31 @@ if(view&&ME){
     x=x||{};
     const e={...(x.h||{}),k:rk(),id,u:user,ts:Date.now(),t:x.t||TT[id]||'',s:'checking',...(x.pl?{pl:1}:{})};
     hadd(e);
-    const a=await admit(id,own,e);
+    let a=await admit(id,own,e);
     if(a.title&&!e.t)e.t=a.title;
+    if(a.ok&&!own&&banned(e))a=no('зритель заблокирован','заказы для тебя на этом канале закрыты');
     if(!a.ok){e.s='rejected';e.r=a.r;saveDB();renderHist();log('Отклонено, '+user+': '+a.r);decline(e,a.m);return}
     if(!own&&!C.b_on&&C.bans.some(b=>b.id===id))log('Видео в бан-листе, но галочка «Банлист» выключена');
     e.s='queued';e.qa=Date.now();if(!e.t)e.t=TT[id]||'';saveDB();renderHist();ttl(id);
-    send({t:'add',id,u:user,k:e.k,cut:a.cut,front:!!x.front});log('Заказ: '+user+(own?' (стример)':'')+': '+id+(a.cut?' · до '+fmt(a.cut):''));
+    send({t:'add',id,u:user,k:e.k,cut:a.cut,front:!!x.front});log('Заказ: '+user+(own?' (стример)':'')+(e.src==='chat'?' (!!play)':'')+': '+id+(a.cut?' · до '+fmt(a.cut):''));
+    if(e.src==='chat'&&!own){const n=ql.filter(x=>!x.pl).length+(now.id?1:0);
+      chat('@'+e.ul+', принято'+(e.t?': «'+e.t.slice(0,90)+'»':'')+(n?' — №'+n+' в очереди':' — сейчас заиграет')+(a.cut?' (до '+fmt(a.cut)+')':''),e.ul,e.mid,'cmd')}
   }
   async function decline(e,msg,lead){
     const txt=(lead||'заказ не принят')+': '+msg+'. ';
+    if(!e.rid&&e.src==='chat'&&e.ul){chat('@'+e.ul+', '+txt.trim(),e.ul,e.mid,'cmd');return}
     if(!e.rid){log('Сообщение в чат было бы: @'+e.u+', '+txt+'Баллы возвращены.');return}
     const ok=await refundE(e);
     chat('@'+(e.ul||e.u)+', '+txt+(ok?'Баллы возвращены.':'Баллы вернуть автоматически не вышло — стример вернёт вручную.'),e.ul||e.u);
   }
   function note(e,msg){if(e&&e.rid)chat('@'+(e.ul||e.u)+', '+msg+'. Баллы возвращены.',e.ul||e.u)}
   $('tp').onclick=()=>{const v=$('tl').value,id=yid(v);if(!id){toast(linkWhy(v));return}order(id,'тест',!$('tv').checked);$('tl').value=''};
-  const scopes=()=>['channel:manage:redemptions',...(C.chat_on?['user:write:chat']:[]),'moderation:read','moderator:read:blocked_terms'];
-  const SCN={'channel:manage:redemptions':'управлять наградой и возвращать баллы','user:write:chat':'писать в чат','moderation:read':'проверять текст через AutoMod','moderator:read:blocked_terms':'читать запрещённые слова канала'};
+  const scopes=()=>['channel:manage:redemptions',...(C.chat_on?['user:write:chat']:[]),'moderation:read','moderator:read:blocked_terms',
+    ...(needChat()?['user:read:chat']:[]),...(ADV.play.on&&ADV.play.fol?['moderator:read:followers']:[])];
+  const SCN={'channel:manage:redemptions':'управлять наградой и возвращать баллы','user:write:chat':'писать в чат','moderation:read':'проверять текст через AutoMod и видеть модераторов','moderator:read:blocked_terms':'читать запрещённые слова канала',
+    'user:read:chat':'читать чат (!!play, команды, «что за трек?»)','moderator:read:followers':'видеть, кто и когда зафоловился'};
   let twSc=null;
+  const missing=()=>{const sc=twSc||String(C.sc||'').split(/[ +]/);return C.tok?scopes().filter(s=>!sc.includes(s)):[]};
   function scopeUI(){
     const sc=twSc||String(C.sc||'').split(/[ +]/),miss=scopes().filter(s=>!sc.includes(s)),extra=!C.chat_on&&sc.includes('user:write:chat'),w=$('twm');
     w.hidden=!(C.tok&&(miss.length||extra));
@@ -1204,6 +1541,7 @@ if(view&&ME){
     location.href='https://id.twitch.tv/oauth2/authorize?client_id='+encodeURIComponent(C.cid)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(scopes().join(' '))+'&state='+s+(C.relog?'&force_verify=true':'')};
   function relogin(){const t=+localStorage.getItem('ytq-re')||0;if(Date.now()-t>300000){localStorage.setItem('ytq-re',Date.now());login()}else setSt('bad','Токен истёк. Нажми «Подключить»')}
   let ws=null,uid=null,on=false,tries=0;const doneIds=new Set();
+  let wsSid='',chatOn=false,chatErr='',chatBusy=false,meU=null,btype='';
   const H=()=>({Authorization:'Bearer '+C.tok,'Client-Id':C.cid});
   async function connect(manual){
     on=true;connBtn(true);
@@ -1214,7 +1552,8 @@ if(view&&ME){
       const r=await fetch('https://api.twitch.tv/helix/users',{headers:H()});
       if(r.status===401){C.tok='';$('tok').value='';saveC();on=false;connBtn(false);setSt('wait','Токен истёк, вход заново…');if(manual)login();else relogin();return}
       if(!r.ok){setSt('bad','Токен не подходит ('+r.status+')');off();return}
-      const me=(await r.json()).data[0];uid=me.id;const tc=$('twc');tc.textContent=me.display_name||me.login;tc.className='';
+      const me=(await r.json()).data[0];uid=me.id;meU={login:me.login,name:me.display_name||me.login};btype=me.broadcaster_type||'';
+      const tc=$('twc');tc.textContent=me.display_name||me.login;tc.className='';
     }catch(e){setSt('wait','Нет связи с Twitch, пробую снова…');retry();return}
     twExtra();
     openWs('wss://eventsub.wss.twitch.tv/ws',null);
@@ -1227,21 +1566,44 @@ if(view&&ME){
     s.onmessage=async e=>{
       const m=JSON.parse(e.data),t=m.metadata.message_type;
       if(t==='session_welcome'){
-        if(old){ws=s;old.close()}else await sub(m.payload.session.id);
+        if(old){ws=s;wsSid=m.payload.session.id;old.close()}else await sub(m.payload.session.id);
       }else if(t==='session_reconnect'){openWs(m.payload.session.reconnect_url,s)}
-      else if(t==='revocation'){C.tok='';$('tok').value='';saveC();off();setSt('wait','Токен отозван или истёк, вход заново…');relogin()}
+      else if(t==='revocation'){
+        if((m.payload.subscription||{}).type==='channel.chat.message'){chatOn=false;chatErr='Twitch отключил чтение чата: '+((m.payload.subscription||{}).status||'');log(chatErr);postCtx();return}
+        C.tok='';$('tok').value='';saveC();off();setSt('wait','Токен отозван или истёк, вход заново…');relogin()}
       else if(t==='notification'){
         if(doneIds.has(m.metadata.message_id))return;doneIds.add(m.metadata.message_id);
-        redeem(m.payload.event);
+        if(doneIds.size>3000)doneIds.delete(doneIds.values().next().value);
+        if((m.payload.subscription||{}).type==='channel.chat.message')chatMsg(m.payload.event);
+        else redeem(m.payload.event);
       }
     };
-    s.onclose=()=>{if(ws===s&&on){ws=null;setSt('wait','Переподключение…');retry()}};
+    s.onclose=()=>{if(ws===s&&on){ws=null;chatOn=false;setSt('wait','Переподключение…');retry()}};
+  }
+  async function esub(type,cond){
+    try{
+      const r=await fetch('https://api.twitch.tv/helix/eventsub/subscriptions',{method:'POST',headers:{...H(),'Content-Type':'application/json'},
+        body:JSON.stringify({type,version:'1',condition:cond,transport:{method:'websocket',session_id:wsSid}})});
+      if(r.ok||r.status===409)return '';
+      let t='';try{t=(await r.json()).message||''}catch(e){}
+      return r.status===403&&type==='channel.chat.message'?'нет права читать чат — нажми «Обновить» в ⚙ → Twitch':r.status+(t?' — '+t:'');
+    }catch(e){return 'нет связи с Twitch'}
   }
   async function sub(sid){
-    const r=await fetch('https://api.twitch.tv/helix/eventsub/subscriptions',{method:'POST',headers:{...H(),'Content-Type':'application/json'},
-      body:JSON.stringify({type:'channel.channel_points_custom_reward_redemption.add',version:'1',condition:{broadcaster_user_id:uid},transport:{method:'websocket',session_id:sid}})});
-    if(r.ok){tries=0;C.auto=true;saveC();setSt('ok','Слушаю награды канала')}
-    else{let t='';try{t=(await r.json()).message}catch(e){}setSt('bad','Twitch не дал подписку на награды: '+r.status+(t?' — '+t:''));off()}
+    wsSid=sid;chatOn=false;
+    const e1=await esub('channel.channel_points_custom_reward_redemption.add',{broadcaster_user_id:uid});
+    if(needChat())await chatSub();
+    if(e1&&!chatOn){setSt('bad','Twitch не дал подписку на награды: '+e1);off();return}
+    tries=0;C.auto=true;saveC();
+    setSt('ok',e1?'Слушаю чат · награды недоступны':chatOn?'Слушаю награды и чат':'Слушаю награды канала');
+    postCtx(true);
+  }
+  async function chatSub(){
+    if(chatOn||chatBusy||!wsSid||!uid||!ws)return;
+    chatBusy=true;const e=await esub('channel.chat.message',{broadcaster_user_id:uid,user_id:uid});chatBusy=false;
+    chatOn=!e;chatErr=e;log(chatOn?'Читаю чат: !!play, команды и вопросы про трек':'Чат: '+e);
+    if(on&&!e&&$('tws').textContent===TWS.ok)setSt('ok',/награды недоступны/.test($('st').textContent)?'Слушаю чат · награды недоступны':'Слушаю награды и чат');
+    postCtx();
   }
   async function twExtra(){
     let sc=null;
@@ -1267,7 +1629,7 @@ if(view&&ME){
       else set('не найдена','bad','Нет награды для заказов с текстом. Создай её здесь — тогда баллы можно будет возвращать.',true);
       twSync();autoOpen();recB();
     }catch(s){
-      if(s===403){rwCur=null;rwWhy='баллы канала есть только у компаньонов и партнёров';ordUI()}
+      if(s===403){rwCur=null;rwWhy='баллов канала нет — заказы можно принимать в чате: ⚙ → Расширенные настройки';ordUI()}
       set(s===403?'нет баллов канала':'не удалось проверить','off',s===403?'Баллы канала есть только у компаньонов и партнёров Twitch.':'');
     }
   }
@@ -1277,19 +1639,19 @@ if(view&&ME){
     t.disabled=!ok;t.checked=act;$('ord').classList.toggle('on',act);
     s.textContent=!on||!uid?'Twitch не подключён':!rwCur?rwWhy||'проверяю награду…':'«'+rwCur.title+'» · '+(act?'зрители могут заказывать':rwCur.is_paused?'награда на паузе':'награда скрыта от зрителей');
   }
-  $('ordt').onchange=async()=>{
-    const t=$('ordt'),want=t.checked;
-    if(!rwCur||!uid){ordUI();return}
-    t.disabled=true;
+  async function rewardSet(want){
+    if(!rwCur||!uid){ordUI();return false}
+    $('ordt').disabled=true;let ok=false;
     try{
       const r=await fetch('https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id='+uid+'&id='+encodeURIComponent(rwCur.id),{method:'PATCH',
         headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(want?{is_enabled:true,is_paused:false}:{is_enabled:false})});
       const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.data&&j.data[0]){rwCur=j.data[0];rwMine=rwMine.map(x=>x.id===rwCur.id?rwCur:x);twSync();toast(want?'Заказы открыты':'Заказы закрыты — награда скрыта');log(want?'Заказы за баллы открыты':'Заказы за баллы закрыты')}
+      if(r.ok&&j.data&&j.data[0]){ok=true;rwCur=j.data[0];rwMine=rwMine.map(x=>x.id===rwCur.id?rwCur:x);twSync();toast(want?'Заказы открыты':'Заказы закрыты — награда скрыта');log(want?'Заказы за баллы открыты':'Заказы за баллы закрыты')}
       else toast('Twitch не дал переключить: '+(j.message||r.status));
     }catch(e){toast('Нет связи с Twitch')}
-    ordUI();
-  };
+    ordUI();return ok;
+  }
+  $('ordt').onchange=()=>rewardSet($('ordt').checked);
   const T0=Date.now(),FF_DELAY=15*60e3;
   let stSeen=false,rcA=false,rcB=false,twReady=false,rwMine=[],aoDone=false;const prg={};
   const thr=()=>Math.max(.5,Math.min(1,(+C.pl_pct||80)/100));
@@ -1428,22 +1790,27 @@ if(view&&ME){
     twTerms=out;wcomp=null;wInfo();
   }
   const chatT=[],chatTo=new Map();
-  function chatLimit(who){
+  function chatLimit(who,kind){
     const t=Date.now();while(chatT.length&&t-chatT[0]>30000)chatT.shift();
-    if(chatT.length>=10)return 'слишком много сообщений подряд';
-    if(who&&t-(chatTo.get(who)||0)<30000)return 'этому зрителю писали меньше 30 с назад';
-    chatT.push(t);if(who){chatTo.set(who,t);if(chatTo.size>500)chatTo.delete(chatTo.keys().next().value)}
-    return '';
+    if(chatT.length>=15)return 'слишком много сообщений подряд';
+    if(who&&kind!=='mod'){
+      const a=(chatTo.get(who)||[]).filter(x=>t-x<30000),max=kind==='cmd'?3:1;
+      if(a.length>=max)return max>1?'этому зрителю уже ответили '+max+' раза за 30 с':'этому зрителю писали меньше 30 с назад';
+      a.push(t);chatTo.delete(who);chatTo.set(who,a);if(chatTo.size>500)chatTo.delete(chatTo.keys().next().value);
+    }
+    chatT.push(t);return '';
   }
-  async function chat(text,who){
+  const mine=new Set(),mineT=new Map();
+  async function chat(text,who,reply,kind){
     if(!C.chat_on){log('В чат не пишу (выключено в настройках): '+text);return}
     if(!uid||!C.tok){log('Чат: Twitch не подключён — '+text);return}
-    const lim=chatLimit(who);if(lim){log('Чат пропущен ('+lim+'): '+text);return}
+    const lim=chatLimit(who,kind||'pts');if(lim){log('Чат пропущен ('+lim+'): '+text);return}
+    mineT.set(text.slice(0,500),Date.now());if(mineT.size>100)mineT.delete(mineT.keys().next().value);
     try{
       const r=await fetch('https://api.twitch.tv/helix/chat/messages',{method:'POST',headers:{...H(),'Content-Type':'application/json'},
-        body:JSON.stringify({broadcaster_id:uid,sender_id:uid,message:text.slice(0,500)})});
+        body:JSON.stringify({broadcaster_id:uid,sender_id:uid,message:text.slice(0,500),...(reply?{reply_parent_message_id:reply}:{})})});
       const j=await r.json().catch(()=>({})),d=j.data&&j.data[0];
-      if(r.ok&&d&&d.is_sent){log('В чат: '+text);return}
+      if(r.ok&&d&&d.is_sent){mine.add(d.message_id);if(mine.size>200)mine.delete(mine.values().next().value);log('В чат: '+text);return}
       log('Чат не отправлен: '+(d&&d.drop_reason?d.drop_reason.message:r.status===401||r.status===403?'нет прав — нажми «Обновить»':r.status+' '+(j.message||'')));
     }catch(e){log('Чат: нет связи с Twitch')}
   }
@@ -1462,8 +1829,12 @@ if(view&&ME){
     const title=ev.reward&&ev.reward.title||'',inp=String(ev.user_input||'');
     if(C.flt&&!title.toLowerCase().includes(C.flt.toLowerCase()))return;
     const own=ev.user_id===ev.broadcaster_user_id;
-    const h={rid:ev.id,rw:ev.reward&&ev.reward.id,cost:ev.reward&&ev.reward.cost,bid:ev.broadcaster_user_id,ul:ev.user_login};
+    const h={rid:ev.id,rw:ev.reward&&ev.reward.id,cost:ev.reward&&ev.reward.cost,bid:ev.broadcaster_user_id,ul:ev.user_login,uid:ev.user_id};
     const id=yid(inp);
+    if(!own&&banned(h)){
+      const e={...h,k:rk(),id:id||'',u:ev.user_name,ts:Date.now(),t:inp.slice(0,80)||'(пустой заказ)',s:'rejected',r:'зритель заблокирован'};
+      hadd(e);log('Отклонено, '+ev.user_name+': заблокирован');decline(e,'заказы для тебя на этом канале закрыты');return;
+    }
     if(!id){
       if(!C.flt&&!/youtu/i.test(inp)){log(ev.user_name+': награда «'+title+'» без ссылки на YouTube — пропускаю');return}
       const why=linkWhy(inp),e={...h,k:rk(),id:'',u:ev.user_name,ts:Date.now(),t:inp.slice(0,80)||'(пустой заказ)',s:'rejected',r:why};
@@ -1471,6 +1842,207 @@ if(view&&ME){
     }
     order(id,ev.user_name,own,{h});
   }
+  const BADGE=(ev,...s)=>(ev.badges||[]).some(b=>s.includes(b.set_id));
+  const banned=x=>(ADV.bans||[]).some(b=>(b.id&&x.uid&&b.id===String(x.uid))||(b.login&&x.ul&&b.login===String(x.ul).toLowerCase()));
+  const can=(u,c)=>u.own||(u.mod&&!!(ADV.rights[u.id]||{})[c]);
+  const INV=/[­͏؜ᅟᅠ឴឵᠋-᠎​-‏‪-‮⁠-⁯ㅤ︀-️﻿ﾠ\u{e0000}-\u{e007f}]/gu;
+  function chatMsg(ev){
+    if(!ev||mine.has(ev.message_id))return;
+    const raw=String(ev.message&&ev.message.text||''),text=raw.replace(INV,'').replace(/\s+/g,' ').trim();if(!text)return;
+    const u={id:String(ev.chatter_user_id||''),login:String(ev.chatter_user_login||'').toLowerCase(),name:ev.chatter_user_name||ev.chatter_user_login||'',mid:ev.message_id,
+      own:ev.chatter_user_id===uid,mod:BADGE(ev,'moderator','lead_moderator'),vip:BADGE(ev,'vip'),sub:BADGE(ev,'subscriber','founder')};
+    if(u.own&&Date.now()-(mineT.get(raw.slice(0,500))||0)<60000)return;
+    if(text.startsWith('!!')){command(u,text);return}
+    if(ADV.ask&&isTrackQuestion(text.toLowerCase().replace(/ё/g,'е')))trackAnswer(u);
+  }
+  const CMDN={skip:'skip',skipback:'skipback',unban:'unban',stop:'stop',volume:'vol',vol:'vol',off:'off',on:'off',help:'help'};
+  async function command(u,text){
+    const a=text.slice(2).trim().split(/\s+/),c=(a.shift()||'').toLowerCase(),arg=a.join(' ');
+    if(c==='play'){playCmd(u,arg);return}
+    const need=c==='ban'?(arg?'banu':'ban'):CMDN[c];
+    if(!need)return;
+    if(!can(u,need)){if(u.mod)log('!!'+c+' от '+u.name+': нет права (⚙ → Расширенные настройки → Модераторы)');return}
+    log('Команда из чата: !!'+c+(arg?' '+arg:'')+' — '+u.name);
+    const k=now.k,e=k&&hget(k),tr={id:now.id,t:now.t,u:now.u};
+    switch(need){
+      case 'skip':if(now.id){if(k)hset(k,'skipped');send({t:'skip'})}break;
+      case 'ban':if(now.id){banTr(tr);if(k)hset(k,'banned');send({t:'skip'})}break;
+      case 'skipback':
+        if(!now.id)break;
+        if(e&&e.rid&&!e.rf&&await refundE(e,1))note(e,'модератор пропустил твой трек');
+        if(k)hset(k,'skipped');if(now.k===k)send({t:'skip'});
+        break;
+      case 'stop':if(now.id)togglePa();break;
+      case 'vol':if(/^\d{1,3}$/.test(arg)&&+arg<=100){volV.set(+arg);log('Громкость для зрителей: '+arg+'% ('+u.name+')')}break;
+      case 'off':ordersSet(c==='on',u);break;
+      case 'help':chat('Помощь по плееру: https://t.me/vtuberstand',u.login,u.mid,'mod');saveDbg('!!help · '+u.name);break;
+      case 'banu':banUser(arg,u);break;
+      case 'unban':unbanUser(arg,u);break;
+    }
+  }
+  async function ordersSet(want,u){
+    if(rwCur&&rwCur.is_enabled!==want)await rewardSet(want);
+    if(!!ADV.closed===want)await advPost({op:'closed',v:!want,by:u.name});
+    log(want?'Заказы открыты командой !!on ('+u.name+')':'Заказы закрыты командой !!off ('+u.name+')');
+  }
+  async function playCmd(u,arg){
+    const P=ADV.play;
+    if(!P.on)return;
+    if(!u.own){
+      if(ADV.closed){chat('@'+u.login+', заказы сейчас закрыты',u.login,u.mid,'cmd');return}
+      if(banned({uid:u.id,ul:u.login})){chat('@'+u.login+', заказы для тебя на этом канале закрыты',u.login,u.mid,'cmd');return}
+      const why=await mayOrder(u);
+      if(why){log('!!play от '+u.name+' не принят: '+why);return}
+    }
+    const id=yid(arg);
+    if(!id){chat('@'+u.login+', '+linkWhy(arg)+'. Пример: !!play https://youtu.be/…',u.login,u.mid,'cmd');return}
+    if(!u.own&&!u.mod){
+      const n=DB2.hist.filter(e=>e.src==='chat'&&e.uid===u.id&&['checking','queued','playing'].includes(e.s)).length;
+      if(n>=P.per){chat('@'+u.login+', у тебя уже '+n+' в очереди — следующий можно, когда один из них доиграет',u.login,u.mid,'cmd');return}
+    }
+    order(id,u.name,u.own,{h:{ul:u.login,uid:u.id,src:'chat',mid:u.mid}});
+  }
+  async function mayOrder(u){
+    const P=ADV.play;
+    if(u.mod)return P.mod?'':'модераторам заказывать выключено';
+    if(u.vip&&P.vip)return '';
+    if(u.sub&&P.sub&&btype)return '';
+    if(!P.fol)return 'нет права заказывать';
+    try{const d=await followDays(u.id);return d>=P.days?'':d<0?'не фоловер':'фоловит '+Math.floor(d)+' дн., нужно '+P.days}
+    catch(e){return 'не проверить фоловера: '+e.message}
+  }
+  const folC=new Map();
+  async function followDays(id){
+    const c=folC.get(id);if(c&&Date.now()-c.at<(c.d>=ADV.play.days?36e5:6e5))return c.d;
+    const r=await fetch('https://api.twitch.tv/helix/channels/followers?broadcaster_id='+uid+'&user_id='+encodeURIComponent(id),{headers:H()});
+    if(!r.ok)throw new Error(r.status===401||r.status===403?'нет права — нажми «Обновить» в ⚙ → Twitch':'ошибка '+r.status);
+    const f=((await r.json()).data||[])[0],d=f?(Date.now()-Date.parse(f.followed_at))/864e5:-1;
+    folC.set(id,{d,at:Date.now()});if(folC.size>2000)folC.delete(folC.keys().next().value);
+    return d;
+  }
+  const nickOf=s=>String(s||'').trim().split(/\s+/)[0].replace(/^@/,'').toLowerCase();
+  async function banUser(arg,by){
+    const l=nickOf(arg);
+    if(!/^[a-z0-9_]{1,25}$/.test(l)){chat('@'+by.login+', не понял ник: '+String(arg).slice(0,40),by.login,by.mid,'mod');return}
+    let t,err='';
+    try{const r=await fetch('https://api.twitch.tv/helix/users?login='+encodeURIComponent(l),{headers:H()});if(!r.ok)throw new Error('Twitch '+r.status);t=((await r.json()).data||[])[0]||null}
+    catch(e){err=e.message;t=null}
+    if(!t&&!err){chat('@'+by.login+', на Twitch нет зрителя '+l,by.login,by.mid,'mod');return}
+    if(t&&t.id===uid)return;
+    if(!(await advPost({op:'ban',login:t?t.login:l,id:t?t.id:'',name:t?t.display_name:l,by:by.name}))){log('!!ban '+l+': сервер не сохранил');return}
+    const n=await enforceBans();postCtx();
+    chat('@'+by.login+', '+(t?t.display_name:l)+' больше не может заказывать треки'+(n?' · убрал из очереди: '+n:''),by.login,by.mid,'mod');
+  }
+  async function unbanUser(arg,by){
+    const l=nickOf(arg);
+    if(!(ADV.bans||[]).some(b=>b.login===l)){chat('@'+by.login+', '+(l||'этого зрителя')+' нет в списке заблокированных',by.login,by.mid,'mod');return}
+    if(await advPost({op:'unban',login:l}))chat('@'+by.login+', '+l+' снова может заказывать треки',by.login,by.mid,'mod');
+  }
+  async function enforceBans(){
+    let n=0;
+    for(const x of ql.filter(x=>!x.pl)){
+      const e=hget(x.k);if(!e||e.s!=='queued'||!banned(e))continue;
+      e.r='зритель заблокирован';if(e.rid&&!e.rf)await refundE(e,1);
+      hset(x.k,'removed');send({t:'rm',k:x.k});n++;
+    }
+    if(n)log('Убрано из очереди (зритель заблокирован): '+n);
+    return n;
+  }
+  const askT=new Map();
+  function trackAnswer(u){
+    if(!C.chat_on||!now.id)return;
+    const k=now.k||now.id,t=Date.now();if(t-(askT.get(k)||0)<30000)return;
+    askT.set(k,t);if(askT.size>200)askT.delete(askT.keys().next().value);
+    const title=now.t||TT[now.id]||'';
+    chat('Сейчас играет: '+(title?title.slice(0,200)+' — ':'')+'https://youtu.be/'+now.id+(now.u&&!now.pk&&now.u!=='тест'?' · заказал '+now.u:''),'',u.mid);
+  }
+  const TQ_WHAT='(?:что|чо|че|чё|шо|што|що|чего|какой|какая|какое|какую|чей|чья|чье)';
+  const TQ_ITEM='(?:трек|трэк|треч|песн|песенк|музык|музон|музл|мелоди|композиц|сонг|видео|видос|клип|бит(?![а-я])|звук)';
+  const TQ=[
+    new RegExp('(?<![а-я])'+TQ_WHAT+'\\s+(?:(?:это|за|щас|сейчас|ща|тут|там|у тебя|играет|играющ\\S*|был\\S*|такой|такая)\\s+)*'+TQ_ITEM,'u'),
+    new RegExp('(?<![а-я])'+TQ_ITEM+'\\S*\\s+(?:\\S+\\s+)?(?:как|что|какой|какая|чей)(?:\\s|\\?|$)','u'),
+    /(?<![а-я])(?:что|чо|че|шо|што|що)\s+(?:(?:щас|сейчас|ща|тут|там|у тебя|это)\s+)*(?:играет|звучит|поет|за звук)/u,
+    /(?<![а-я])кто\s+(?:(?:это|щас|сейчас|тут)\s+)*(?:поет|исполня\S*)|(?<![а-я])исполнитель\s*\?/u,
+    new RegExp('(?:как\\s+называ\\S*|назван\\S*|назови|скинь|кинь|дай|ссылк\\S*|линк|сурс|соус)\\s+(?:\\S+\\s+)?'+TQ_ITEM,'u'),
+    new RegExp('^(?:а\\s+)?'+TQ_ITEM+'\\S*\\s*\\?+$','u'),
+    /(?<![a-z])(?:what|which|whats|what's)\s+(?:(?:is|the|this|that|song|track|music)\s+)*(?:song|track|music)|(?:song|track)\s*(?:name|\?)|name\s+of\s+(?:the|this)\s+song|(?<![a-z])sauce(?![a-z])/,
+  ];
+  function isTrackQuestion(text){
+    if(text.length>90)return false;
+    return TQ.some(r=>r.test(text));
+  }
+  async function advLoad(){try{const j=await yget('/adv');if(j&&j.play){ADV=j;advApply()}}catch(e){}}
+  async function advPost(o){
+    try{const r=await fetch('/adv',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify(o)});if(!r.ok)return false;await advLoad();return true}catch(e){return false}
+  }
+  function advApply(){
+    scopeUI();advUI();
+    if(on&&uid&&needChat())chatSub();
+    enforceBans();
+  }
+  function advUI(){
+    const P=ADV.play,r=Object.keys(ADV.rights||{}).length,b=(ADV.bans||[]).length;
+    $('advi').textContent='Заказы в чате (!!play): '+(P.on?'включены':'выключены')+' · модераторов с правами: '+r+' · заблокировано зрителей: '+b+
+      (ADV.closed?' · заказы закрыты командой !!off ('+ADV.closed.by+')':'');
+  }
+  $('advo').onclick=()=>fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({page:'settings'})})
+    .then(r=>{if(!r.ok)throw 0;toast('Открываю в браузере')}).catch(()=>window.open('/redeem-player.html?view=settings','_blank'));
+  let modsC=null,modsAt=0,ctxBusy=false,ctxAgain=false;
+  async function getMods(){
+    const out=[];let cur='';
+    for(let i=0;i<10;i++){
+      const r=await fetch('https://api.twitch.tv/helix/moderation/moderators?broadcaster_id='+uid+'&first=100'+(cur?'&after='+encodeURIComponent(cur):''),{headers:H()});
+      if(!r.ok)throw new Error(r.status===401||r.status===403?'нет права видеть модераторов — нажми «Обновить»':'ошибка '+r.status);
+      const j=await r.json();(j.data||[]).forEach(m=>out.push({id:m.user_id,login:m.user_login,name:m.user_name}));
+      cur=j.pagination&&j.pagination.cursor;if(!cur)break;
+    }
+    return out;
+  }
+  let avC={};
+  async function avatars(ids){
+    const need=ids.filter(id=>!(id in avC));
+    for(let i=0;i<need.length;i+=100){
+      const part=need.slice(i,i+100);
+      try{const r=await fetch('https://api.twitch.tv/helix/users?'+part.map(id=>'id='+encodeURIComponent(id)).join('&'),{headers:H()});if(!r.ok)break;
+        ((await r.json()).data||[]).forEach(u=>{avC[u.id]=u.profile_image_url||''});part.forEach(id=>{if(!(id in avC))avC[id]=''})}catch(e){break}
+    }
+    return Object.fromEntries(ids.filter(id=>avC[id]).map(id=>[id,avC[id]]));
+  }
+  async function postCtx(fresh){
+    if(!uid||!C.tok)return;
+    if(ctxBusy){ctxAgain=true;return}ctxBusy=true;
+    try{
+      if(fresh||!modsC||Date.now()-modsAt>6e5){try{modsC=await getMods();modsAt=Date.now()}catch(e){log('Модераторы: '+e.message);if(!modsC)modsC=[]}if(fresh)avC={}}
+      const av=await avatars([...new Set([...modsC.map(m=>m.id),...(ADV.bans||[]).map(b=>b.id).filter(Boolean)])].slice(0,600));
+      await fetch('/adv',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({op:'ctx',ctx:{
+        chan:{id:uid,login:meU&&meU.login,name:meU&&meU.name,type:btype},mods:modsC,av,need:missing().map(s=>SCN[s]||s),
+        chat:chatOn?'ok':chatErr||(needChat()?'подключаюсь…':''),write:!!C.chat_on,reward:rwCur?rwCur.title:rwWhy}})});
+    }catch(e){}
+    ctxBusy=false;if(ctxAgain){ctxAgain=false;postCtx()}
+  }
+  setInterval(()=>{if(on&&uid)postCtx()},6e5);
+  let helpT=0;
+  async function saveDbg(why){
+    if(/^!!help/.test(why)){if(Date.now()-helpT<60000)return;helpT=Date.now()}
+    const cfg={...C};delete cfg.tok;delete cfg.yk;cfg.bans=(C.bans||[]).length+' видео';cfg.w_my=myWords().length+' слов';cfg.yk=C.yk?'задан':'';
+    const text=['== Панель',$('dp').textContent,'','== Лог панели',...[...lg.children].reverse().map(x=>x.textContent),'',
+      '== Twitch','канал: '+$('twc').textContent+' · тип: '+(btype||'без статуса')+' · '+$('tws').textContent+' — '+$('st').textContent,
+      'права входа: '+(twSc||String(C.sc||'').split(/[ +]/)).join(' '),'не хватает: '+missing().join(', '),
+      'награда: '+$('twr').textContent+' · '+$('ords').textContent,'чат: '+(chatOn?'читаю':chatErr||'не нужен'),'',
+      '== Сейчас',JSON.stringify({now,pa,ql:ql.length,apl,yt:ytBad()?'не грузится':'ок',audio:!!C.audio}),'',
+      '== Настройки панели (без токена и ключа)',JSON.stringify(cfg),'',
+      '== История (последние 30)',...DB2.hist.slice(0,30).map(e=>[fdate(e.ts),e.s,e.u,e.src||'',e.id,(e.t||'').slice(0,60),e.r||''].join(' | ')),'',
+      '== Браузер',navigator.userAgent].join('\n');
+    try{
+      const r=await fetch('/debug',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({text,why})});
+      const j=await r.json();if(!r.ok)throw new Error(j.err||r.status);
+      dbgPath(j.path);log('Файл отладки сохранён: '+j.name);return j;
+    }catch(e){log('Файл отладки не сохранился: '+e.message)}
+  }
+  const dbgPath=p=>{const e=$('dbgp');e.textContent=p?'Последний файл: '+p:'';e.title=p||''};
+  $('dsv').onclick=async()=>{const j=await saveDbg('кнопка в панели');if(j)toast('Файл отладки сохранён')};
+  yget('/debug').then(j=>{const f=j.files&&j.files[0];if(f)dbgPath(j.dir+'\\'+f.name)}).catch(()=>{});
+  if(DEBUG)window.__T={chatMsg,command,isTrackQuestion,chatLimit,ADV:()=>ADV,setNow:x=>{now={...now,...x}}};
   $('conn').onclick=()=>{if(on){off();setSt('off','Отключено. Заказы за баллы не принимаются')}else connect(true)};
   $('lout').onclick=()=>{
     const tok=C.tok;off();
@@ -1489,7 +2061,7 @@ if(view&&ME){
   wInfo();
   let xCC='';
   setInfo('нет связи',false);
-  loadDB();
+  loadDB();advLoad();
   if(C.auto&&C.cid&&C.tok)connect();
 }
 </script></body></html>
