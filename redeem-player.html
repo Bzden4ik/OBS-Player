@@ -82,6 +82,8 @@ button.gh:hover{background:var(--pill)}
 .np{padding:10px;gap:8px;overflow:hidden}
 .pv{position:relative;border-radius:12px;overflow:hidden;background:#111}
 #pvw{display:block;width:100%;aspect-ratio:16/9;border:0;background:#111;transition:filter .35s;pointer-events:none}
+.pvi{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#111;transition:filter .35s}
+.np.pz .pvi{filter:grayscale(1) brightness(.45)}
 .np.pz #pvw{filter:grayscale(1) brightness(.45)}
 .tag{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 8px;border-radius:99px;background:rgba(10,10,11,.78);font-size:11px;font-weight:500;pointer-events:none}
 .tag:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
@@ -327,7 +329,7 @@ body.stg{overflow:auto;font-size:13.5px}
     <div class="lr ord" id="ord"><div class="lt"><b>Заказы за баллы</b><i id="ords">Twitch не подключён</i></div><input type="checkbox" class="tg" id="ordt" disabled><label class="sw" for="ordt" title="Показать или скрыть награду для заказов на Twitch"></label></div>
     <div class="warn" id="rcv" hidden title="Нажми, чтобы скрыть"></div>
     <div class="card np idle" id="np">
-      <div class="pv"><iframe id="pvw" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" style="display:none"></iframe><span class="tag" id="ntag">играет</span><button class="pvc" id="pvc" aria-label="Пауза"></button></div>
+      <div class="pv"><iframe id="pvw" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" style="display:none"></iframe><img id="pvi" class="pvi" alt="" hidden><span class="tag" id="ntag">играет</span><button class="pvc" id="pvc" aria-label="Пауза"></button></div>
       <div class="nm"><div id="nt">Ничего не играет</div><div id="nu"></div></div>
       <div class="pgw" id="npg" hidden><div class="pgb" id="pgb" role="slider" tabindex="0" aria-label="Перемотка трека"><div class="pg"><i></i></div><span class="pgk"></span><span class="pgt" id="pgt"></span></div><div class="tms num"><span id="nt0">0:00</span><span id="nt1">0:00</span></div></div>
       <div class="ctl" id="na"></div>
@@ -405,6 +407,7 @@ body.stg{overflow:auto;font-size:13.5px}
       <div class="row"><label>Лайк в</label><select id="lkp" style="flex:1"></select></div>
       <div class="lr two"><div class="lt"><b>Трек сыгран</b><i>если проиграно столько или больше. Не доиграл из-за вылета OBS или ПК — баллы вернутся сами</i></div><label class="fld"><input id="pl_pct" inputmode="numeric" autocomplete="off" aria-label="Порог «сыгран», проценты"><i>%</i></label></div>
       <div class="lr"><input type="checkbox" class="tg" id="ord_auto"><label class="sw" for="ord_auto"></label><label class="lt" for="ord_auto"><b>Заказы вместе с OBS</b><i>закрывать при выходе из OBS и открывать при запуске</i></label></div>
+      <div class="lr"><input type="checkbox" class="tg" id="pv"><label class="sw" for="pv"></label><label class="lt" for="pv"><b>Живое превью в панели</b><i>видео трека во вкладке «Сейчас». Выключено — вместо видео обложка, и OBS не тратит силы на второе видео</i></label></div>
       <div class="lr"><input type="checkbox" class="tg" id="hist_wk"><label class="sw" for="hist_wk"></label><label class="lt" for="hist_wk"><b>Чистить историю раз в неделю</b><i id="hwi"></i></label></div>
       <div class="hint">Громкость и «только звук» — во вкладке «Сейчас», под кнопками плеера</div>
     </div>
@@ -511,18 +514,25 @@ body.stg{overflow:auto;font-size:13.5px}
 const $=id=>document.getElementById(id);
 const view=new URLSearchParams(location.search).get('view')==='player';
 const DEBUG=new URLSearchParams(location.search).get('debug')==='1';
-const DB={};let dbEl=null;
+const DB={};let dbEl=null,dbT=0;
+const dbText=()=>Object.entries(DB).map(([a,b])=>a+': '+b).join('\n');
 function dbg(k,v){
   if(view&&!DEBUG)return;
+  if(DB[k]===v)return;
   DB[k]=v;
+  if(!dbT)dbT=setTimeout(dbDraw,view?250:1000);
+}
+function dbDraw(){
+  dbT=0;
   let el=view?dbEl:$('dp');
   if(view&&!el){el=dbEl=document.createElement('pre');el.style.cssText='position:fixed;left:8px;top:8px;margin:0;padding:10px;background:rgba(0,0,0,.85);color:#7CFC00;font:18px/1.35 monospace;z-index:9;white-space:pre-wrap;max-width:95vw';document.body.appendChild(el)}
-  if(el)el.textContent=Object.entries(DB).map(([a,b])=>a+': '+b).join('\n');
+  if(!el||(!view&&!el.offsetParent))return;
+  el.textContent=dbText();
 }
 addEventListener('error',e=>dbg('ОШИБКА JS',e.message+' (строка '+e.lineno+')'));
 addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.reason)));
 const KEY='ytq-cfg',LIKES='❤ Лайки';
-const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true};
+const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
@@ -580,7 +590,7 @@ async function poll(){
     dbg('связь с сервером','ок (опрос раз в 0.5 с)');
     j.msgs.forEach(m=>recv(m));
   }catch(e){dbg('связь с сервером','ОШИБКА: '+e.message+' | страница: '+location.origin)}
-  setTimeout(poll,500);
+  setTimeout(poll,view&&!ME?500:document.hidden?2000:1000);
 }
 poll();
 function loadYT(){
@@ -830,7 +840,8 @@ if(view&&ME){
   async function loadD(){try{DF=await(await fetch('/debug',{cache:'no-store'})).json();syncD()}catch(e){}}
   onmsg=m=>{if(m.t==='adv')loadA().then(loadH);else if(m.t==='dbg')loadD()};
   loadA().then(loadH);loadD();
-  setInterval(loadA,5000);setInterval(loadH,30000);
+  setInterval(()=>{if(!document.hidden)loadA()},5000);setInterval(()=>{if(!document.hidden)loadH()},30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadA().then(loadH)});
 }else{
   $('box').style.display='none';
   dbg('Панель','работает');
@@ -856,7 +867,7 @@ if(view&&ME){
   }
   const TWS={ok:'подключено',wait:'подключение',bad:'ошибка',off:'отключено'};
   const setSt=(s,t)=>{const e=$('tws');e.textContent=TWS[s];e.className='stat '+s;$('st').textContent=t;$('ht').className='pill '+(s==='ok'||s==='wait'?s:'bad')};
-  const setInfo=(t,ok)=>{const e=$('info');e.textContent=t;e.className=ok?'':'off';$('hp').className='pill '+(ok?'ok':'bad')};
+  let infoS='';const setInfo=(t,ok)=>{if(infoS===t+ok)return;infoS=t+ok;const e=$('info');e.textContent=t;e.className=ok?'':'off';$('hp').className='pill '+(ok?'ok':'bad')};
   const fmt=n=>Math.floor(n/60)+':'+String(n%60).padStart(2,'0');
   const fdate=ts=>new Date(ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   const ftime=ts=>new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
@@ -1047,7 +1058,19 @@ if(view&&ME){
     $('nt1').title=pos.cut>0&&pos.cut<pos.du?'Трек обрезан до '+fmt(pos.cut)+' (полная длина '+fmt(pos.du)+')':'';
     b.setAttribute('aria-valuemax',end);b.setAttribute('aria-valuenow',Math.floor(t));b.setAttribute('aria-valuetext',fmt(Math.floor(t))+' из '+fmt(end));
   }
-  setInterval(()=>{if(now.id&&!pa&&scrub===null)prog()},500);
+  setInterval(()=>{if(now.id&&!pa&&scrub===null&&nowSeen())prog()},500);
+  const nowSeen=()=>!document.hidden&&$('s-now').classList.contains('on');
+  let pvId=null;
+  function pvLoad(){
+    const f=$('pvw'),im=$('pvi'),live=C.pv!==false;
+    const want=now.id&&live&&nowSeen()?now.id:null;
+    im.hidden=!(now.id&&!live);if(!im.hidden&&im.dataset.id!==now.id){im.dataset.id=now.id;im.src='https://i.ytimg.com/vi/'+now.id+'/hqdefault.jpg'}
+    f.style.display=now.id&&live?'block':'none';
+    if(want===pvId)return;
+    pvId=want;pvPa=false;
+    f.src=want?'https://www.youtube.com/embed/'+want+'?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1&origin='+encodeURIComponent(location.origin)+'&start='+Math.floor(ptime()):'about:blank';
+  }
+  document.addEventListener('visibilitychange',()=>{pvLoad();if(!document.hidden)prog()});
   const pvc=(func,args)=>{try{$('pvw').contentWindow.postMessage(JSON.stringify({event:'command',func,args:args||[]}),'*')}catch(e){}};
   function pvSync(){if(!now.id||pa===pvPa)return;pvPa=pa;pvc(pa?'pauseVideo':'playVideo');if(!pa)pvc('seekTo',[Math.floor(ptime()),true])}
   const pgb=$('pgb'),pgt=$('pgt');
@@ -1221,13 +1244,14 @@ if(view&&ME){
     closePop();shown.clear();
     document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
     document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
-    document.querySelector('main').scrollTop=0;renderAll();
+    document.querySelector('main').scrollTop=0;renderAll();pvLoad();if(t==='set')dbDraw();
     if(t==='set'&&!$('updb').hidden&&app&&updShown!==app.latest.version){updShown=app.latest.version;$('apn').closest('.card').scrollIntoView({block:'start'})}
   }
   document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   ['cid','tok','flt','yk'].forEach(k=>{const el=$(k);el.value=C[k];el.oninput=()=>{C[k]=el.value.trim();saveC()}});
   ['v_on','l_on','d_on','b_on','q_on','mus_on','chat_on','w_on','w_hate','w_am','w_tw','w_txt','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
     el.onchange=()=>{C[k]=el.checked;saveC();if(k==='ord_auto')twSync();if(k==='chat_on')scopeUI();if(k[0]==='w'){wcomp=null;wInfo();if(k==='w_tw'&&C.w_tw&&uid)blocked()}}});
+  $('pv').checked=C.pv!==false;$('pv').onchange=()=>{C.pv=$('pv').checked;saveC();pvLoad()};
   $('hist_wk').checked=C.hist_wk;histUI();
   $('hist_wk').onchange=()=>{C.hist_wk=$('hist_wk').checked;if(C.hist_wk)C.hist_t=Date.now();saveC();histUI();toast(C.hist_wk?'История будет чиститься раз в неделю':'История хранится вся')};
   $('w_my').value=C.w_my;$('w_my').oninput=()=>{C.w_my=$('w_my').value;saveC();wcomp=null;wInfo()};
@@ -1311,7 +1335,7 @@ if(view&&ME){
     addPl(curPl,{id,t,u:''});renderAll();
   };
   $('pl').onkeydown=e=>{if(e.key==='Enter')$('pa').click()};
-  $('dcp').onclick=()=>copy($('dp').textContent+'\n'+[...lg.children].map(x=>x.textContent).join('\n'),'Отладка скопирована');
+  $('dcp').onclick=()=>copy(dbText()+'\n'+[...lg.children].map(x=>x.textContent).join('\n'),'Отладка скопирована');
   $('dcl').onclick=()=>{lg.innerHTML='';toast('Лог очищен')};
   $('rel').onclick=async()=>{
     const old=C.tok;C.tok='';$('tok').value='';saveC();
@@ -1349,8 +1373,6 @@ if(view&&ME){
       if(now.k&&now.k!==m.ck){const e=hget(now.k);if(e&&e.s==='playing')finish(e)}
       now={id:m.cur,k:m.ck,t:m.title||(m.cur&&TT[m.cur])||'',u:m.cu||'',pk:m.pk||null};
       if(m.ck){const e=hget(m.ck);if(e){now.u=e.u;if(e.s==='queued')hset(m.ck,'playing')}}
-      if(m.cur){f.style.display='block';pvPa=false;f.src='https://www.youtube.com/embed/'+m.cur+'?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1&origin='+encodeURIComponent(location.origin)+'&start='+(m.tm||0)}
-      else{f.style.display='none';f.src='about:blank'}
     }
     if(m.cur&&m.title){now.t=m.title;TT[m.cur]=m.title;hupd(m.cur,m.title)}
     ql=m.ql||[];apl=m.ap||null;
@@ -1358,6 +1380,7 @@ if(view&&ME){
     DB2.hist.forEach(e=>{if(e.s==='queued'&&e.qa&&e.ts>=T0&&Date.now()-e.qa>15000&&!isLive(e.k))lose(e,0,'пропал из очереди: плеер перезапустился')});
     if(Date.now()-paT>2500)pa=!!m.pa;
     if(fresh||Date.now()-skT>2000)pos={tm:m.tm||0,at:Date.now(),du:m.du||0,cut:m.cut||0};else pos={...pos,du:m.du||pos.du,cut:m.cut||0};
+    pvLoad();
     const s=JSON.stringify([m.cur,m.ck,now.t,pa,ql.map(x=>x.k),apl&&[apl.k,apl.pos],ytBad()]);
     if(s!==sig){sig=s;renderNow();renderQ()}else if(scrub===null)prog();
   }
@@ -2066,7 +2089,7 @@ if(view&&ME){
   async function saveDbg(why){
     if(/^!!help/.test(why)){if(Date.now()-helpT<60000)return;helpT=Date.now()}
     const cfg={...C};delete cfg.tok;delete cfg.yk;cfg.bans=(C.bans||[]).length+' видео';cfg.w_my=myWords().length+' слов';cfg.yk=C.yk?'задан':'';
-    const text=['== Панель',$('dp').textContent,'','== Лог панели',...[...lg.children].reverse().map(x=>x.textContent),'',
+    const text=['== Панель',dbText(),'','== Лог панели',...[...lg.children].reverse().map(x=>x.textContent),'',
       '== Twitch','канал: '+$('twc').textContent+' · тип: '+(btype||'без статуса')+' · '+$('tws').textContent+' — '+$('st').textContent,
       'права входа: '+(twSc||String(C.sc||'').split(/[ +]/)).join(' '),'не хватает: '+missing().join(', '),
       'награда: '+$('twr').textContent+' · '+$('ords').textContent,'чат: '+(chatOn?'читаю':chatErr||'не нужен'),'',

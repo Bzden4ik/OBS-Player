@@ -517,11 +517,18 @@ srv.once('listening',()=>{
   setTimeout(()=>checkUpdate(),8000);setInterval(()=>checkUpdate(),36e5);
 });
 if(AUTO){
-  let obsSeen=false,obsGone=0;
-  setInterval(()=>execFile('tasklist',['/FO','CSV','/NH'],{windowsHide:true},(e,out)=>{
-    if(e||leaving)return;
-    if(/^"obs(64|32)?\.exe"/mi.test(out)){obsSeen=true;obsGone=0}
-    else if(obsSeen&&++obsGone>=2)shutdown('OBS больше не запущен');
-  }),5000);
+  let obsPid=0,obsGone=0,tries=0;
+  const alive=pid=>{try{process.kill(pid,0);return true}catch(e){return e.code==='EPERM'}};
+  setInterval(()=>{
+    if(leaving)return;
+    if(!obsPid){
+      if(++tries<=12)execFile('tasklist',['/FI','IMAGENAME eq obs*','/FO','CSV','/NH'],{windowsHide:true},(e,out)=>{
+        const m=/^"obs(64|32)?\.exe","(\d+)"/mi.exec(out||'');if(m)obsPid=+m[2];
+      });
+      return;
+    }
+    if(alive(obsPid)){obsGone=0;return}
+    if(++obsGone>=2)shutdown('OBS больше не запущен');
+  },5000);
   setInterval(()=>{if(Date.now()-last>IDLE)shutdown('плеер и панель молчат')},Math.min(10000,IDLE/2));
 }
