@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.0',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.1',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -61,7 +61,8 @@ async function ytInfo(id){
     bot:/not a bot/i.test(why),age:/confirm your age|age.restricted|inappropriate for some users/i.test(why),
     region:/country|region/i.test(why),priv:/private/i.test(why),live:!!(v.isLive||v.isUpcoming),
     title:v.title||'',author:v.author||'',desc:v.shortDescription||'',kw:v.keywords||[],
-    len:+v.lengthSeconds||0,views:v.viewCount==null?null:+v.viewCount,countries:mf.availableCountries||null};
+    len:+v.lengthSeconds||0,views:v.viewCount==null?null:+v.viewCount,countries:mf.availableCountries||null,
+    cat:String(mf.category||''),mvt:String(v.musicVideoType||'')};
   if(!o.bot)INFO.set(id,{v:o,at:Date.now()});
   if(INFO.size>300)INFO.delete(INFO.keys().next().value);
   return o;

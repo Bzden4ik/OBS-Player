@@ -244,7 +244,12 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
 .vr.z .ic{color:var(--bad)}.vr.z .kw:after{background:var(--bad)}.vr.z .vv input{color:var(--mu)}
 .aol{padding:8px 2px 4px 4px}
 .dbgp{font-family:var(--mono);font-size:11px;word-break:break-all;user-select:all}.dbgp:empty{display:none}
-#advo svg{width:16px;height:16px}
+.advq{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--ln)}
+.advq:hover{background:var(--s2)}
+.advq>svg{width:18px;height:18px;color:#c8c8cc}.advq>svg:last-child{width:15px;height:15px;color:var(--mu);margin-left:auto}
+.advq span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.advq b{font-weight:600}.advq em{font-style:normal;color:var(--mu);font-size:11.5px;line-height:1.35}
+.ord.go .lt{cursor:pointer}.ord.go #ords{text-decoration:underline;text-underline-offset:2px}
 body.stg{overflow:auto;font-size:13.5px}
 #st{max-width:1120px;margin:0 auto;padding:22px 24px 60px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px}
 #st header{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--ln)}
@@ -284,7 +289,8 @@ body.stg{overflow:auto;font-size:13.5px}
 #st .who b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #st .who i{font-style:normal;color:var(--mu);font-size:11.5px}
 #st .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;color:var(--ink);flex:none;overflow:hidden}
-#st .av img{width:100%;height:100%;object-fit:cover;display:block;animation:sw .3s var(--ease)}
+#st .av img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s var(--ease)}
+#st .av img.in{opacity:1}
 #st .rch{display:flex;flex-wrap:wrap;gap:6px}
 #st .rc{height:30px;padding:0 12px;font:500 12px var(--mono);color:var(--mu);background:var(--in);box-shadow:inset 0 0 0 1px var(--ln2);transition:background .22s,color .22s,box-shadow .22s,transform .15s var(--ease)}
 #st .rc:hover{color:var(--fg);background:var(--in);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
@@ -349,6 +355,9 @@ body.stg{overflow:auto;font-size:13.5px}
     <div id="pll"></div>
   </section>
   <section id="s-set">
+    <button type="button" class="advq" id="advo" title="Откроется в обычном браузере — OBS не нагружает. Закрой, когда настроишь: всё продолжит работать">
+      <i data-i="sliders"></i><span><b>Расширенные настройки</b><em id="advi">Заказы в чате (!!play), права модераторов, заблокированные зрители, файлы отладки</em></span><i data-i="ext"></i>
+    </button>
     <div class="card">
       <div class="ch"><div class="h">Twitch</div><span class="stat" id="tws">отключено</span></div>
       <div class="sub" id="st">Подключи Twitch, чтобы принимать заказы за баллы канала</div>
@@ -388,6 +397,7 @@ body.stg{overflow:auto;font-size:13.5px}
           <textarea id="w_my" rows="3" placeholder="Свои слова, по одному в строке. слово* — с любым окончанием" aria-label="Свои запрещённые слова"></textarea>
           <div class="hint" id="winfo"></div></div></details></div>
       <div class="lr"><input type="checkbox" class="tg" id="q_on"><label class="sw" for="q_on"></label><label class="lt" for="q_on"><b>Повторы</b><i>не пускать трек, который уже играет или в очереди</i></label></div>
+      <div class="lr"><input type="checkbox" class="tg" id="mus_on"><label class="sw" for="mus_on"></label><label class="lt" for="mus_on"><b>Только музыка</b><i>зрители и модераторы заказывают только музыку: без скрипа мела, сирен, роликов про еду и прочих видео. Стример может поставить что угодно</i></label></div>
       <div class="lr key"><div class="lt"><b>YouTube API</b><i>нужен для лайков; просмотры и длительность берутся и без него</i></div><input id="yk" type="password" autocomplete="off" placeholder="ключ API" aria-label="Ключ YouTube API"></div>
     </div>
     <div class="card">
@@ -395,13 +405,8 @@ body.stg{overflow:auto;font-size:13.5px}
       <div class="row"><label>Лайк в</label><select id="lkp" style="flex:1"></select></div>
       <div class="lr two"><div class="lt"><b>Трек сыгран</b><i>если проиграно столько или больше. Не доиграл из-за вылета OBS или ПК — баллы вернутся сами</i></div><label class="fld"><input id="pl_pct" inputmode="numeric" autocomplete="off" aria-label="Порог «сыгран», проценты"><i>%</i></label></div>
       <div class="lr"><input type="checkbox" class="tg" id="ord_auto"><label class="sw" for="ord_auto"></label><label class="lt" for="ord_auto"><b>Заказы вместе с OBS</b><i>закрывать при выходе из OBS и открывать при запуске</i></label></div>
+      <div class="lr"><input type="checkbox" class="tg" id="hist_wk"><label class="sw" for="hist_wk"></label><label class="lt" for="hist_wk"><b>Чистить историю раз в неделю</b><i id="hwi"></i></label></div>
       <div class="hint">Громкость и «только звук» — во вкладке «Сейчас», под кнопками плеера</div>
-    </div>
-    <div class="card">
-      <div class="h">Расширенные настройки</div>
-      <div class="sub" id="advi">Заказы в чате (!!play), права модераторов, заблокированные зрители, файлы отладки</div>
-      <button id="advo" class="w"><i data-i="ext"></i>Открыть в браузере</button>
-      <div class="hint">Страница открывается в обычном браузере и OBS не нагружает. Закрой её, когда настроишь — всё продолжит работать</div>
     </div>
     <div class="card">
       <div class="ch"><div class="h" id="apn">Bzden4ik Player</div><span class="stat" id="aps"></span></div>
@@ -517,7 +522,7 @@ function dbg(k,v){
 addEventListener('error',e=>dbg('ОШИБКА JS',e.message+' (строка '+e.lineno+')'));
 addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.reason)));
 const KEY='ytq-cfg',LIKES='❤ Лайки';
-const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false};
+const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
@@ -715,7 +720,7 @@ if(view&&ME){
       CMD.map(c=>'<button class="rc" data-c="'+c[0]+'" title="'+esc(c[2])+'">'+esc(c[1])+'</button>').join('')+'</div>';
     d.querySelector('.av').style.background=col(m.login);
     d.querySelector('b').textContent=m.name||m.login;
-    d.addEventListener('animationend',()=>{d.style.animation='none'},{once:true});
+    d.addEventListener('animationend',function end(e){if(e.target!==d)return;d.style.animation='none';d.removeEventListener('animationend',end)});
     d.onclick=e=>{
       const r={...((A.rights||{})[m.id]||{})},b=e.target.closest('.rc');
       if(b){const v=!r[b.dataset.c];paintM(d,{...r,[b.dataset.c]:v?1:undefined});op({op:'right',id:m.id,cmds:{[b.dataset.c]:v}});return}
@@ -728,7 +733,7 @@ if(view&&ME){
     if(el.dataset.u===url&&el.childNodes.length)return;el.dataset.u=url;el.textContent='';
     const letter=(name||'?')[0].toUpperCase();
     if(!url){el.textContent=letter;return}
-    const i=document.createElement('img');i.alt='';i.referrerPolicy='no-referrer';i.src=url;i.onerror=()=>{i.remove();el.textContent=letter};el.append(i);
+    const i=document.createElement('img');i.alt='';i.referrerPolicy='no-referrer';i.onload=()=>i.classList.add('in');i.onerror=()=>{i.remove();el.textContent=letter};i.src=url;el.append(i);
   }
   function paintM(d,r){
     r=Object.fromEntries(Object.entries(r).filter(([,v])=>v));
@@ -742,7 +747,9 @@ if(view&&ME){
     box.querySelector('.empty')&&box.querySelector('.empty').remove();
     const want=new Set(mods.map(m=>m.id));
     box.querySelectorAll('.mc').forEach(d=>{if(!want.has(d.dataset.id))d.remove()});
-    mods.forEach((m,i)=>{let d=box.querySelector('.mc[data-id="'+m.id+'"]');if(!d){d=mCard(m);d.style.animationDelay=Math.min(i,8)*40+'ms'}box.append(d);paintM(d,(A.rights||{})[m.id]||{});paintAv(d.querySelector('.av'),avOf(m.id),m.name||m.login)});
+    mods.forEach((m,i)=>{let d=box.querySelector('.mc[data-id="'+m.id+'"]');if(!d){d=mCard(m);d.style.animationDelay=Math.min(i,8)*40+'ms'}
+      const at=box.children[i];if(at!==d)box.insertBefore(d,at||null);
+      paintM(d,(A.rights||{})[m.id]||{});paintAv(d.querySelector('.av'),avOf(m.id),m.name||m.login)});
   }
   const lastOrder=b=>HIST.find(e=>(b.id&&e.uid===b.id)||(e.ul&&e.ul.toLowerCase()===b.login)||(!e.ul&&String(e.u||'').toLowerCase()===b.login));
   function bRow(b){
@@ -750,7 +757,7 @@ if(view&&ME){
     d.innerHTML='<div class="who"><span class="av"></span><div><b></b><i></i></div></div><div class="lv"></div><button class="gh">Разбанить</button>';
     d.querySelector('.av').style.background=col(b.login);
     d.querySelector('b').textContent=b.name||b.login;d.querySelector('.who i').textContent='заблокировал '+(b.by||'?')+' · '+fd(b.at);
-    d.addEventListener('animationend',()=>{d.style.animation='none'},{once:true});
+    d.addEventListener('animationend',function end(e){if(e.target!==d)return;d.style.animation='none';d.removeEventListener('animationend',end)});
     d.querySelector('button').onclick=async()=>{d.classList.add('out');if(!(await op({op:'unban',login:b.login},(b.name||b.login)+' может снова заказывать')))d.classList.remove('out')};
     return d;
   }
@@ -876,12 +883,22 @@ if(view&&ME){
     if(sd&&ld){const have=new Set(sd.hist.map(e=>e.k)),add=ld.hist.filter(e=>e&&e.k&&!have.has(e.k));if(add.length){d={...sd,hist:sd.hist.concat(add).sort((a,b)=>b.ts-a.ts)};merged=true}}
     if(d){DB2=d;DB2.pl=DB2.pl&&typeof DB2.pl==='object'?DB2.pl:{}}
     if(!DB2.pl[LIKES])DB2.pl[LIKES]=[];
-    dbOk=reach;
+    dbOk=reach;if(reach)weekly();
     dbg('история',(reach?'загружено записей: ':'сервер недоступен, из кэша: ')+DB2.hist.length);
     if(reach&&(merged||!sd))saveDB();
     if(!reach)setTimeout(loadDB,5000);
     renderAll();tryRec();
   }
+  const WEEK=7*864e5;
+  function weekly(){
+    if(!C.hist_wk)return;
+    if(!C.hist_t){C.hist_t=Date.now();saveC();histUI();return}
+    if(Date.now()-C.hist_t<WEEK)return;
+    const keep=DB2.hist.filter(e=>['queued','playing','checking'].includes(e.s)||(e.rid&&!e.rf&&!e.ff)),n=DB2.hist.length-keep.length;
+    DB2.hist=keep;C.hist_t=Date.now();saveC();saveDB();histUI();
+    log('История очищена (раз в неделю): удалено записей '+n);
+  }
+  function histUI(){$('hwi').textContent=C.hist_wk?'следующая очистка — '+new Date((C.hist_t||Date.now())+WEEK).toLocaleString('ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})+' (при запуске). Плейлисты и лайки остаются':'выключено — история хранится вся'}
   const hget=k=>DB2.hist.find(x=>x.k===k);
   function hadd(e,quiet){DB2.hist.unshift(e);saveDB();if(!quiet)renderHist()}
   function hset(k,s){const e=hget(k);if(e){e.s=s;if(s!=='queued'&&s!=='playing')e.fin=Date.now();saveDB();renderHist();renderQ()}}
@@ -1209,8 +1226,10 @@ if(view&&ME){
   }
   document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   ['cid','tok','flt','yk'].forEach(k=>{const el=$(k);el.value=C[k];el.oninput=()=>{C[k]=el.value.trim();saveC()}});
-  ['v_on','l_on','d_on','b_on','q_on','chat_on','w_on','w_hate','w_am','w_tw','w_txt','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
+  ['v_on','l_on','d_on','b_on','q_on','mus_on','chat_on','w_on','w_hate','w_am','w_tw','w_txt','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
     el.onchange=()=>{C[k]=el.checked;saveC();if(k==='ord_auto')twSync();if(k==='chat_on')scopeUI();if(k[0]==='w'){wcomp=null;wInfo();if(k==='w_tw'&&C.w_tw&&uid)blocked()}}});
+  $('hist_wk').checked=C.hist_wk;histUI();
+  $('hist_wk').onchange=()=>{C.hist_wk=$('hist_wk').checked;if(C.hist_wk)C.hist_t=Date.now();saveC();histUI();toast(C.hist_wk?'История будет чиститься раз в неделю':'История хранится вся')};
   $('w_my').value=C.w_my;$('w_my').oninput=()=>{C.w_my=$('w_my').value;saveC();wcomp=null;wInfo()};
   $('rwb').onclick=mkReward;
   const NF={v_n:{step:1000,min:0},l_n:{step:100,min:0},d_n:{step:.5,min:.5,dec:1},pl_pct:{step:5,min:50,max:100}};
@@ -1354,7 +1373,7 @@ if(view&&ME){
     const sn=v.snippet||{},cd=v.contentDetails||{},sx=v.statistics||{},st=v.status||{},rr=cd.regionRestriction||{};
     const m=/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(cd.duration||'')||[];
     TT[id]=sn.title;
-    return{title:sn.title||'',author:sn.channelTitle||'',desc:sn.description||'',kw:sn.tags||[],
+    return{title:sn.title||'',author:sn.channelTitle||'',desc:sn.description||'',kw:sn.tags||[],catId:String(sn.categoryId||''),
       views:sx.viewCount===undefined?null:+sx.viewCount,likes:sx.likeCount===undefined?null:+sx.likeCount,
       sec:(+m[1]||0)*86400+(+m[2]||0)*3600+(+m[3]||0)*60+(+m[4]||0),
       embed:st.embeddable!==false,live:!!sn.liveBroadcastContent&&sn.liveBroadcastContent!=='none',
@@ -1436,6 +1455,20 @@ if(view&&ME){
       return bad?parts[+bad.msg_id.split('_')[0]].src:false;
     }catch(e){return null}
   }
+  const NOISE=/мел(ом)? по доске|ногт\S* по доске|скрип мела|скрежет|chalkboard|nails on|ear ?rape|scream(er)?s? (compilation|сборник)|скример|sound effects?|звуков\S* эффект|(^|[^a-z])sfx([^a-z]|$)|10 hours|10 часов|siren sound|police siren|air raid|звук сирены|сирена (скорой|полиц|воздушн|тревог)|сигнализац|alarm sound|звук будильника|громк\S* звук/i;
+  const MUSICISH=/official (music )?video|official audio|lyric|караоке|(^|[^a-z])m\/?v([^a-z]|$)|remix|(^|[^a-z])cover([^a-z]|$)|кавер|nightcore|sped up|slowed|reverb|(^|[^a-z])ost([^a-z]|$)|soundtrack|саундтрек|feat\.|(^|[^a-z])ft\.|клип|песн|(^|[^a-z])song|альбом|album|instrumental|минус(овка)?([^а-я]|$)|phonk|фонк|music|музык/i;
+  const NONMUSIC=/рецепт|готовим|кулинар|мукбанг|mukbang|обзор|(^|[^a-z])review|unboxing|распаковк|влог|vlog|гайд|(^|[^a-z])guide|tutorial|туториал|how to|как (сделать|приготовить)|прохожден|let'?s ?play|летсплей|стрим|(^|[^a-z])stream|подкаст|podcast|новости|(^|[^a-z])news|интервью|interview|реакци|reaction|asmr|асмр|пранк|prank|challenge|челлендж/i;
+  const SONGLIKE=/^[^-–—|]{1,60}\s[-–—]\s[^-–—|]{1,90}$/;
+  const AMBIG=new Set(['Entertainment','People & Blogs','Film & Animation','Comedy','24','22','1','23']);
+  function notMusic(x){
+    const all=x.title+' '+x.kw,cat=x.cat||x.catId;
+    if(NOISE.test(all))return['раздражающие звуки (только музыка)','такие звуки заказывать нельзя — только музыка'];
+    if(x.cat==='Music'||x.catId==='10'||x.mvt||/ - topic$|vevo$/i.test(x.author.trim())||MUSICISH.test(x.title+' '+x.author))return null;
+    if(cat&&!AMBIG.has(cat))return['не музыка: '+(x.cat||'категория '+x.catId),'можно заказывать только музыку'];
+    if(!x.title)return['не удалось проверить, музыка ли это',NOCHK];
+    if(!NONMUSIC.test(all)&&SONGLIKE.test(x.title.trim()))return null;
+    return['не похоже на музыку'+(cat?' ('+(x.cat||'категория '+x.catId)+')':' (по названию)'),'можно заказывать только музыку'];
+  }
   const no=(r,m)=>({ok:false,r,m:m||r});
   const NOCHK='не получилось проверить видео, попробуй позже',GONE='видео удалено, закрыто или ссылка с ошибкой',
     LIVE='трансляции и премьеры заказывать нельзя',AGE='у видео возрастное ограничение 18+',GEOB='видео заблокировано в стране, откуда играет плеер';
@@ -1473,6 +1506,12 @@ if(view&&ME){
       if(api.age)return no('возрастное ограничение 18+',AGE);
       if(api.live)return no('трансляция или премьера',LIVE);
       if(cc&&((api.blocked&&api.blocked.includes(cc))||(api.allowed&&!api.allowed.includes(cc))))return no(where,GEOB);
+    }
+    if(C.mus_on){
+      let mt=(api&&api.title)||(inf&&inf.title)||'',ma=(api&&api.author)||(inf&&inf.author)||'';
+      if(!mt)try{const r=await fetch('https://www.youtube.com/oembed?url='+encodeURIComponent(url(id))+'&format=json');if(r.ok){const j=await r.json();mt=j.title||'';ma=j.author_name||''}}catch(e){}
+      const nm=notMusic({title:mt,author:ma,kw:((api&&api.kw)||(inf&&inf.kw)||[]).join(' '),cat:(inf&&inf.cat)||'',catId:(api&&api.catId)||'',mvt:(inf&&inf.mvt)||''});
+      if(nm)return no(nm[0],nm[1]);
     }
     const views=api&&api.views!=null?api.views:inf?inf.views:null,sec=(api&&api.sec)||(inf&&inf.len)||0;
     if(C.v_on){if(views==null)return no('не удалось узнать просмотры',NOCHK);if(views<C.v_n)return no('просмотров '+fmtN(views)+' < '+fmtN(C.v_n),'у видео меньше '+fmtN(C.v_n)+' просмотров')}
@@ -1629,14 +1668,14 @@ if(view&&ME){
       else set('не найдена','bad','Нет награды для заказов с текстом. Создай её здесь — тогда баллы можно будет возвращать.',true);
       twSync();autoOpen();recB();
     }catch(s){
-      if(s===403){rwCur=null;rwWhy='баллов канала нет — заказы можно принимать в чате: ⚙ → Расширенные настройки';ordUI()}
+      if(s===403){rwCur=null;rwWhy='баллов канала нет — нажми, чтобы включить заказы в чате (!!play)';ordUI()}
       set(s===403?'нет баллов канала':'не удалось проверить','off',s===403?'Баллы канала есть только у компаньонов и партнёров Twitch.':'');
     }
   }
   let rwCur=null,rwWhy='';
   function ordUI(){
     const t=$('ordt'),s=$('ords'),ok=on&&uid&&rwCur,act=!!(ok&&rwCur.is_enabled&&!rwCur.is_paused);
-    t.disabled=!ok;t.checked=act;$('ord').classList.toggle('on',act);
+    t.disabled=!ok;t.checked=act;$('ord').classList.toggle('on',act);$('ord').classList.toggle('go',!!(on&&uid&&!rwCur&&/баллов канала нет/.test(rwWhy)));
     s.textContent=!on||!uid?'Twitch не подключён':!rwCur?rwWhy||'проверяю награду…':'«'+rwCur.title+'» · '+(act?'зрители могут заказывать':rwCur.is_paused?'награда на паузе':'награда скрыта от зрителей');
   }
   async function rewardSet(want){
@@ -1985,8 +2024,10 @@ if(view&&ME){
     $('advi').textContent='Заказы в чате (!!play): '+(P.on?'включены':'выключены')+' · модераторов с правами: '+r+' · заблокировано зрителей: '+b+
       (ADV.closed?' · заказы закрыты командой !!off ('+ADV.closed.by+')':'');
   }
-  $('advo').onclick=()=>fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({page:'settings'})})
-    .then(r=>{if(!r.ok)throw 0;toast('Открываю в браузере')}).catch(()=>window.open('/redeem-player.html?view=settings','_blank'));
+  const openAdv=()=>fetch('/open',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify({page:'settings'})})
+    .then(r=>{if(!r.ok)throw 0;toast('Открываю расширенные настройки в браузере')}).catch(()=>window.open('/redeem-player.html?view=settings','_blank'));
+  $('advo').onclick=openAdv;
+  $('ord').querySelector('.lt').onclick=()=>{if($('ord').classList.contains('go'))openAdv()};
   let modsC=null,modsAt=0,ctxBusy=false,ctxAgain=false;
   async function getMods(){
     const out=[];let cur='';
