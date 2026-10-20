@@ -16,3 +16,4 @@
 | `start-server.vbs` | тихий запуск `server.js` без окна консоли |
 | `banned-words.json` | списки запрещённых слов |
 | `dock-loader.html` | Вызов панель плеера в док-панели |
+| `make-streamlabs-shortcut.vbs` | Нахождение и создания специального ярлыка для StreamLabs |
