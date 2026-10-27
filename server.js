@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.1',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.2',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -349,6 +349,26 @@ const CSP=n=>["default-src 'self'","script-src 'nonce-"+n+"' https://www.youtube
   "img-src 'self' data: https://i.ytimg.com https://static-cdn.jtvnw.net","frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   "connect-src 'self' https://api.twitch.tv https://id.twitch.tv wss://eventsub.wss.twitch.tv https://www.googleapis.com https://www.youtube.com",
   "object-src 'none'","base-uri 'none'","form-action 'none'","frame-ancestors 'none'"].join('; ');
+let obsArgs=null;
+function obsPx(){
+  if(!obsArgs)obsArgs=new Promise(done=>execFile('powershell',['-NoProfile','-NonInteractive','-Command',
+    "(Get-CimInstance Win32_Process -Filter \"Name='obs64.exe' OR Name='obs32.exe' OR Name='obs.exe'\" | Select-Object -First 1).CommandLine"],
+    {windowsHide:true,timeout:20000},(e,out)=>{
+      const a=/(--proxy-(?:server|[a-z]+-url))=("[^"]*"|\S+)/.exec(String(out||''));if(!a)return done(null);
+      let v=a[2].replace(/^"|"$/g,''),to='';
+      if(/^data:/i.test(v)){
+        const c=v.indexOf(',');let pac='';
+        try{pac=/;base64$/i.test(v.slice(0,c))?Buffer.from(v.slice(c+1),'base64').toString():decodeURIComponent(v.slice(c+1))}catch(er){}
+        const p=/\b[A-Z]+5?\s+([\w.-]+):(\d{1,5})\b/.exec(pac);if(p)to=p[1]+':'+p[2];
+      }else if(a[1]==='--proxy-server'){const p=/([\w.-]+):(\d{1,5})(?=[\/;]|$)/.exec(v.replace(/^(\w+=)?\w+:\/\//,''));if(p)to=p[1]+':'+p[2]}
+      done(to?{arg:a[1],to}:null);
+    }));
+  return obsArgs.then(o=>!o?{}:new Promise(done=>{
+    const i=o.to.lastIndexOf(':'),s=net.connect({host:o.to.slice(0,i),port:+o.to.slice(i+1),timeout:2000});
+    const fin=dead=>{s.destroy();done({...o,dead})};
+    s.on('connect',()=>fin(false));s.on('timeout',()=>fin(true));s.on('error',()=>fin(true));
+  }));
+}
 const srv=http.createServer((req,res)=>{
   if(!HOSTS.includes(req.headers.host)){head(res,403);res.end();return}
   const u=new URL(req.url,'http://x');
@@ -360,6 +380,7 @@ const srv=http.createServer((req,res)=>{
   }
   if(u.pathname==='/quit'&&req.method==='POST'){head(res,204);res.end();setTimeout(()=>process.exit(0),100);return}
   if(u.pathname==='/ver'&&req.method==='GET'){json(res,{ver:VER,leaving:!!leaving});return}
+  if(u.pathname==='/obs/px'&&req.method==='GET'){obsPx().then(r=>json(res,r));return}
   if(u.pathname==='/yt/info'&&req.method==='GET'){
     const id=u.searchParams.get('id');if(!ID.test(id||'')){head(res,400);res.end();return}
     Promise.all([ytInfo(id),GEO.cc&&Date.now()-GEO.at<6e5?GEO.cc:geo()]).then(([v,cc])=>json(res,{ok:true,cc,...v}),e=>json(res,{ok:false,err:e.message}));return;

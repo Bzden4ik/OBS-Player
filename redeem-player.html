@@ -104,6 +104,7 @@ button.gh:hover{background:var(--pill)}
 .nm{padding:2px 4px 0;display:flex;flex-direction:column;gap:3px}
 #nt{font-weight:600;font-size:15px;line-height:1.3;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 #nu{color:var(--mu);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#nu.wr{white-space:normal;line-height:1.45;margin-top:2px}
 #nu b{color:#d6d6d9;font-weight:500}
 .np.idle{padding:14px 14px 16px}
 .np.idle .pv,.np.idle .pgw,.np.idle .ctl{display:none}
@@ -176,6 +177,7 @@ button.gh:hover{background:var(--pill)}
 #box{transition:filter .35s,opacity .4s}
 #box.pz{filter:grayscale(1) brightness(.45)}
 #box.ao{width:480px;height:270px;aspect-ratio:auto;opacity:0}
+#box.still{opacity:0;transition:filter .35s,opacity 1.2s}
 .empty{color:var(--mu);padding:14px 4px}
 .tg{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
 .sw{flex:none;width:42px;height:26px;border-radius:99px;background:var(--pill2);position:relative;cursor:pointer;transition:background .25s}
@@ -688,7 +690,14 @@ if(view&&ME){
   };
   loadYT();
   setInterval(st,3000);
-  setInterval(()=>{try{if(ready&&cur&&cur.started&&cur.cut&&yt.getCurrentTime()>=cur.cut){send({t:'done',k:cur.k});next()}}catch(e){}},500);
+  const STILL=20000;let stillAt=0;
+  setInterval(()=>{
+    try{if(ready&&cur&&cur.started&&cur.cut&&yt.getCurrentTime()>=cur.cut){send({t:'done',k:cur.k});next()}}catch(e){}
+    let ps=-1;try{if(ready&&cur)ps=yt.getPlayerState()}catch(e){}
+    if(!cur||ps===1||ps===3)stillAt=0;else if(!stillAt)stillAt=Date.now();
+    const off=!!stillAt&&Date.now()-stillAt>STILL;
+    if(off!==box.classList.contains('still')){box.classList.toggle('still',off);dbg('На стриме',off?'скрыт: трек стоит дольше 20 с':'виден')}
+  },500);
 }else if(SETV){
   $('panel').remove();$('box').remove();
   document.body.className='stg';document.title='Расширенные настройки · Bzden4ik Player';
@@ -943,6 +952,14 @@ if(view&&ME){
         {method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({status:'CANCELED'})});
       if(r.ok){e.rf=Date.now();saveDB();log('Возврат баллов: '+e.u+(e.cost?' · '+e.cost:''));say('Баллы возвращены'+(e.cost?' ('+e.cost+')':''));renderHist();return true}
       let m='';try{m=(await r.json()).message||''}catch(x){}
+      if(r.status===404){
+        let s='';try{const g=await fetch('https://api.twitch.tv/helix/channel_points/custom_rewards/redemptions?id='+encodeURIComponent(e.rid)+'&broadcaster_id='+encodeURIComponent(e.bid)+'&reward_id='+encodeURIComponent(e.rw),{headers:H()});
+          if(g.ok)s=(((await g.json()).data||[])[0]||{}).status||''}catch(x){}
+        if(s==='CANCELED')e.rf=Date.now();else e.ff=-1;
+        saveDB();renderHist();log('Возврат: заказ '+e.u+' уже '+(s==='CANCELED'?'возвращён':s==='FULFILLED'?'закрыт':'не найден')+' на Twitch');
+        say(s==='CANCELED'?'Баллы за этот заказ уже возвращены':s==='FULFILLED'?'Заказ уже закрыт на Twitch — баллы теперь не вернуть':'Этого заказа больше нет на Twitch');
+        return null;
+      }
       log('Возврат не удался: '+r.status+' '+m);
       if(r.status===403&&/client/i.test(m)||r.status===400){e.ff=-1;saveDB()}
       say('Не удалось вернуть: '+(r.status===403&&/client/i.test(m)?'награда создана вручную — создай её в Настройках → Twitch'
@@ -1014,16 +1031,19 @@ if(view&&ME){
   let pos={tm:0,at:0,du:0,cut:0};
   let ytNo=0;const ytBad=()=>!!ytNo&&Date.now()-ytNo>20000;
   const YTBAD='Плеер в OBS не может открыть YouTube: youtube.com из OBS недоступен. Нужен VPN, через который идёт OBS. Если в VPN есть исключения по программам, убери оттуда obs-browser-page.exe';
+  let px=null,pxAt=0;
+  function pxAsk(){if(Date.now()-pxAt<60000)return;pxAt=Date.now();fetch('/obs/px',{cache:'no-store'}).then(r=>r.json()).then(j=>{px=j.dead?j:null;renderNow()}).catch(()=>{})}
+  const ytBadText=()=>px?'OBS запущен с параметром '+px.arg+': YouTube в OBS идёт через прокси '+px.to+', а он не отвечает. Убери этот параметр из запуска OBS (свойства ярлыка или Steam → OBS Studio → Свойства → Параметры запуска) и перезапусти OBS':YTBAD;
   const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e};
   function renderNow(){
     const np=$('np'),has=!!now.id;
     np.classList.toggle('idle',!has);np.classList.toggle('pz',pa&&has);
     $('ntag').textContent=pa?'пауза':'играет';
     $('nt').textContent=has?(now.t||TT[now.id]||'Загрузка названия…'):ytBad()?'YouTube не загружается':'Ничего не играет';
-    const nu=$('nu');nu.textContent='';
-    if(!has)nu.textContent=ytBad()?YTBAD:'Заказы с Twitch и плейлисты появятся здесь';
+    const nu=$('nu');nu.textContent='';nu.classList.toggle('wr',!has&&ytBad());
+    if(!has)nu.textContent=ytBad()?ytBadText():'Заказы с Twitch и плейлисты появятся здесь';
     else if(now.pk)nu.textContent=now.u;
-    else if(now.u){const b=el('b');b.textContent=now.u;nu.append('заказал ',b)}
+    else if(now.u){const he=now.k&&hget(now.k),b=el('b');b.textContent=now.u;if(he&&he.pl)nu.append(b);else nu.append('заказал ',b)}
     const na=$('na');na.innerHTML='';
     prog();pvSync();
     if(!has)return;
@@ -1153,7 +1173,9 @@ if(view&&ME){
     list.slice(0,hn).forEach(e=>{
       const dd=fday(e.ts);if(dd!==day){day=dd;const x=document.createElement('div');x.className='dh';x.textContent=dd;b.append(x)}
       const ex=[];
-      if(e.rid&&!e.rf&&!e.ff&&!['queued','playing','checking'].includes(e.s))ex.push(cbtn('undo','Вернуть баллы',async()=>{if(await refundE(e))note(e,'стример вернул баллы за твой заказ')}));
+      const busy=['queued','playing','checking'].includes(e.s);
+      if(!busy&&VID.test(e.id||''))ex.push(btn('play','Включить',()=>{order(e.id,'из истории',true,{front:true,pl:1,t:e.t});toast(now.id?'Заиграет следующим':'Включаю')}));
+      if(e.rid&&!e.rf&&!e.ff&&!busy)ex.push(cbtn('undo','Вернуть баллы',async()=>{if(await refundE(e))note(e,'стример вернул баллы за твой заказ')}));
       const r=row(e,{sub:ftime(e.ts),st:e.s,r:e.r?'('+e.r+')':'',rf:e.rf,extra:ex,sc:'h',k:e.k});r.style.marginBottom='6px';b.append(r);
     });
     if(list.length>hn){const m=document.createElement('button');m.className='w';m.textContent='Показать ещё ('+(list.length-hn)+')';m.onclick=()=>{hn+=40;renderHist()};b.append(m)}
@@ -1346,8 +1368,8 @@ if(view&&ME){
   let last=0,sig='';
   onmsg=m=>{
     if(m.t==='st'){const gap=Date.now()-last;last=Date.now();
-      if(m.yt===0){if(!ytNo||gap>10000)ytNo=Date.now()}else ytNo=0;
-      const yb=ytBad();setInfo(yb?'на связи, но YouTube в плеере не загружается':'на связи · в очереди '+m.q,!yb);
+      if(m.yt===0){if(!ytNo||gap>10000)ytNo=Date.now()}else{ytNo=0;px=null}
+      const yb=ytBad();if(yb)pxAsk();setInfo(yb?'на связи, но YouTube в плеере не загружается':'на связи · в очереди '+m.q,!yb);
       if('ao' in m&&!!m.ao!==!!C.audio&&Date.now()-aoT>5000){aoT=Date.now();send({t:'vis',a:C.audio?1:0})}
       showNow(m);if(!stSeen){stSeen=true;setTimeout(tryRec,800)}}
     else if(m.t==='done'&&m.k)prg[m.k]=1;
@@ -1579,7 +1601,7 @@ if(view&&ME){
     const txt=(lead||'заказ не принят')+': '+msg+'. ';
     if(!e.rid&&e.src==='chat'&&e.ul){chat('@'+e.ul+', '+txt.trim(),e.ul,e.mid,'cmd');return}
     if(!e.rid){log('Сообщение в чат было бы: @'+e.u+', '+txt+'Баллы возвращены.');return}
-    const ok=await refundE(e);
+    await refundE(e);const ok=!!e.rf;
     chat('@'+(e.ul||e.u)+', '+txt+(ok?'Баллы возвращены.':'Баллы вернуть автоматически не вышло — стример вернёт вручную.'),e.ul||e.u);
   }
   function note(e,msg){if(e&&e.rid)chat('@'+(e.ul||e.u)+', '+msg+'. Баллы возвращены.',e.ul||e.u)}
@@ -1766,7 +1788,7 @@ if(view&&ME){
   async function recB(){
     if(rcB||!rcA||!on||!uid||!twReady)return;rcB=true;
     const g={crash:[],off:[],rej:[]},fail=[];
-    const take=async(e,k)=>{if(await refundE(e,1))g[k].push(e);else fail.push(e)};
+    const take=async(e,k)=>{const r=await refundE(e,1);if(r)g[k].push(e);else if(r===false)fail.push(e)};
     for(const e of DB2.hist.filter(e=>e.s==='lost'&&e.rid&&!e.rf&&!e.ff))await take(e,'crash');
     let add=false;
     let list=[];try{list=await unfulfilled()}catch(e){log('Сверка с Twitch: '+e.message)}
@@ -2093,7 +2115,7 @@ if(view&&ME){
       '== Twitch','канал: '+$('twc').textContent+' · тип: '+(btype||'без статуса')+' · '+$('tws').textContent+' — '+$('st').textContent,
       'права входа: '+(twSc||String(C.sc||'').split(/[ +]/)).join(' '),'не хватает: '+missing().join(', '),
       'награда: '+$('twr').textContent+' · '+$('ords').textContent,'чат: '+(chatOn?'читаю':chatErr||'не нужен'),'',
-      '== Сейчас',JSON.stringify({now,pa,ql:ql.length,apl,yt:ytBad()?'не грузится':'ок',audio:!!C.audio}),'',
+      '== Сейчас',JSON.stringify({now,pa,ql:ql.length,apl,yt:ytBad()?'не грузится':'ок',px,audio:!!C.audio}),'',
       '== Настройки панели (без токена и ключа)',JSON.stringify(cfg),'',
       '== История (последние 30)',...DB2.hist.slice(0,30).map(e=>[fdate(e.ts),e.s,e.u,e.src||'',e.id,(e.t||'').slice(0,60),e.r||''].join(' | ')),'',
       '== Браузер',navigator.userAgent].join('\n');
