@@ -285,10 +285,27 @@ local function al_tick()
   al_sync()
   al_report()
 end
+local function al_restore()
+  local on, M, mute = false, nil, false
+  each(function(s, id)
+    if id == "browser_source" and priv(s, "bz_al", "str") ~= "" then
+      local v = priv(s, "bz_al_v", "num")
+      if not M and v > 1e-3 then
+        M = obs.obs_source_get_volume(s) / v
+        mute = obs.obs_source_get_monitoring_type(s) == obs.OBS_MONITORING_TYPE_MONITOR_ONLY
+      end
+      on = true
+    elseif id == "wasapi_output_capture" and priv(s, "bz_al_desk") then on = true end
+  end)
+  if not on then return nil end
+  local m = al_master(true, math.max(0, math.min(1, M or 1)))
+  if m and mute then obs.obs_source_set_muted(m, true) end
+  return m
+end
 local function al_ready()
   if al.ready then return end
   al.ready = true
-  al.master = al_master(false)
+  al.master = al_master(false) or al_restore()
   for n in (obs.obs_data_get_string(S, "mon_mine") or ""):gmatch("[^\n]+") do
     local s = obs.obs_get_source_by_name(n)
     if s then

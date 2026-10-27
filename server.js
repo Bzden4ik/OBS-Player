@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.2',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.3',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
