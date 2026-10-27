@@ -242,11 +242,29 @@ textarea:focus{border-color:rgba(255,255,255,.45)}
 .sl.dr .kw:after{transform:scale(1.3)}
 .sl.dr .fl,.sl.dr .kw{transition:none}
 .vv{display:flex;align-items:baseline;justify-content:flex-end;flex:none;width:44px;cursor:text}
-.vv input{width:3.6ch;padding:2px 3px;text-align:right;background:transparent;border:1px solid transparent;border-radius:6px;font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+.vv input{width:calc(3ch + 8px);padding:2px 3px;text-align:right;background:transparent;border:1px solid transparent;border-radius:6px;font:500 13px var(--mono);font-variant-numeric:tabular-nums}
 .vv input:hover,.vv input:focus{border-color:rgba(255,255,255,.22);background:var(--pill)}
 .vv i{font-style:normal;color:var(--mu);font-size:11px;margin-left:1px}
 .vr.z .ic{color:var(--bad)}.vr.z .kw:after{background:var(--bad)}.vr.z .vv input{color:var(--mu)}
 .aol{padding:8px 2px 4px 4px}
+.al{margin-top:6px;padding-top:6px;border-top:1px solid var(--ln)}
+.alh{display:flex;align-items:center;gap:8px;min-height:26px;padding-left:4px}
+.alx{margin-left:auto;padding:3px 6px 3px 9px;background:transparent;color:var(--mu);font-size:12px;white-space:nowrap}
+.alx span{display:inline-flex;align-items:center;gap:4px}
+.alx:hover{background:var(--pill);color:var(--fg)}
+.alx svg{width:14px;height:14px;transition:transform .2s var(--ease)}
+.alx[aria-expanded="true"] svg{transform:rotate(90deg)}
+.all{padding-left:12px;border-left:1px solid var(--ln);margin-left:14px}
+.all .vl{width:88px;overflow:hidden;text-overflow:ellipsis}
+.all .vl,.all .sl{transition:opacity .25s}.all .vr.na .vl,.all .vr.na .sl{opacity:.45}
+.vr .ald{width:26px;height:26px;color:var(--mu)}.vr .ald svg{width:13px;height:13px}
+.alo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0 2px 4px;font-size:11.5px;color:var(--mu)}.alo:empty{display:none}
+.alp{display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;font-size:12px}.alp svg{width:12px;height:12px}
+.alf{display:flex;justify-content:flex-end;padding:2px 0}
+.alf .lnk{align-self:auto;text-align:right}
+.aln{margin:6px 2px 2px;padding:8px 10px;border-radius:10px;background:rgba(224,176,80,.08);color:#d9c193;font-size:11.5px;line-height:1.45}
+.aln b{color:var(--warn);font-weight:600}
+.aln .alg{display:block;margin-top:8px;color:var(--fg)}
 .dbgp{font-family:var(--mono);font-size:11px;word-break:break-all;user-select:all}.dbgp:empty{display:none}
 .advq{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--ln)}
 .advq:hover{background:var(--s2)}
@@ -336,7 +354,13 @@ body.stg{overflow:auto;font-size:13.5px}
       <div class="pgw" id="npg" hidden><div class="pgb" id="pgb" role="slider" tabindex="0" aria-label="Перемотка трека"><div class="pg"><i></i></div><span class="pgk"></span><span class="pgt" id="pgt"></span></div><div class="tms num"><span id="nt0">0:00</span><span id="nt1">0:00</span></div></div>
       <div class="ctl" id="na"></div>
       <div class="mix" id="mix"><div id="vc1"></div><div id="vc2"></div>
-        <label class="lim aol" title="Видео на стриме скрыто, звук играет как обычно. Превью здесь остаётся"><input type="checkbox" class="tg" id="aud"><span class="sw sm"></span>Только звук — видео на стриме скрыто</label></div>
+        <label class="lim aol" title="Видео на стриме скрыто, звук играет как обычно. Превью здесь остаётся"><input type="checkbox" class="tg" id="aud"><span class="sw sm"></span>Только звук — видео на стриме скрыто</label>
+        <div class="al" id="al" hidden>
+          <div class="alh"><span class="lbl">Оповещения</span><button class="alx" id="alx" aria-expanded="false" aria-controls="all"><span id="alc"></span></button></div>
+          <div id="alm"></div>
+          <div class="all" id="all" hidden><div id="ali"></div><div class="alo" id="alo"></div><div class="alf"><button class="lnk" id="alr"></button></div></div>
+        </div>
+        <div class="aln" id="aln" hidden></div></div>
     </div>
     <div class="sh"><span class="lbl">Очередь</span><span class="num" id="qc"></span></div>
     <div id="ql"></div>
@@ -571,6 +595,7 @@ const P={
   vol:'M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
   mute:'M11 5L6 9H3v6h3l5 4zM22 9l-6 6M16 9l6 6',
   minus:'M5 12h14',
+  chev:'M9 6l6 6-6 6',
   inc:'M12 5v14M5 12h14',
   ext:'M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6',
   dl:'M12 4v11M7 10l5 5 5-5M5 20h14',
@@ -1296,23 +1321,24 @@ if(view&&ME){
   const seg=$('d_mode'),segP=()=>seg.querySelectorAll('button').forEach(b=>{const on=b.dataset.v===C.d_mode;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)});
   seg.querySelectorAll('button').forEach(b=>{b.setAttribute('role','radio');b.onclick=()=>{C.d_mode=b.dataset.v;saveC();segP()}});segP();
   let scrollT=0;document.querySelector('main').addEventListener('scroll',()=>{scrollT=Date.now()},{passive:true});
-  function volCtl(host,label,title,key,msg){
+  function volCtl(host,label,title,io){
     host.className='vr';
     host.innerHTML='<button class="ic"></button><span class="vl"></span><div class="sl" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="100"><div class="tk"><div class="fl"></div></div><span class="kw"></span></div><label class="vv"><input inputmode="numeric" maxlength="3" autocomplete="off"><i>%</i></label>';
     const q=x=>host.querySelector(x),sl=q('.sl'),inp=q('input'),bm=q('button'),vl=q('.vl');
     vl.textContent=label;vl.title=title;sl.setAttribute('aria-label',label);inp.setAttribute('aria-label',label+', проценты');
-    const cl=v=>Math.max(0,Math.min(100,Math.round(+v||0))),get=()=>cl(C[key]),reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    const cl=v=>Math.max(0,Math.min(100,Math.round(+v||0))),get=()=>cl(io.get()),reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
     let prev=get()||50,tq=0,tl=0,acc=0,hov=0;
     const keep=()=>{if(get()>0)prev=get()};
-    const flush=()=>{tq=0;tl=Date.now();saveC();send({t:msg,v:get()})};
+    const flush=()=>{tq=0;tl=Date.now();io.send(get())};
     function paint(){
       const v=get();sl.style.setProperty('--v',Math.sqrt(v/100).toFixed(4));
       sl.setAttribute('aria-valuenow',v);sl.setAttribute('aria-valuetext',v+'%');
       if(document.activeElement!==inp)inp.value=v;
-      bm.innerHTML=ico(v?'vol':'mute');bm.title=v?'Выключить звук':'Включить звук ('+prev+'%)';host.classList.toggle('z',!v);
+      const mu=!!(io.muted&&io.muted());
+      bm.innerHTML=ico(v&&!mu?'vol':'mute');bm.title=io.tip?io.tip(mu):v?'Выключить звук':'Включить звук ('+prev+'%)';host.classList.toggle('z',!v||mu);
     }
     function put(v,soft){
-      v=cl(v);if(v===get())return;C[key]=v;paint();
+      v=cl(v);if(v===get())return;io.set(v);paint();
       if(!soft&&!reduce)inp.animate([{transform:'scale(1.15)'},{transform:'none'}],{duration:160,easing:'ease-out'});
       if(!tq){const w=90-(Date.now()-tl);if(w<=0)flush();else tq=setTimeout(flush,w)}
     }
@@ -1330,17 +1356,83 @@ if(view&&ME){
       if(Math.abs(acc)<40)return;
       put(get()+(acc<0?1:-1)*(e.shiftKey?5:1));acc=0;keep();
     },{passive:false});
-    bm.onclick=()=>{if(get()){keep();put(0)}else put(prev)};
+    bm.onclick=()=>{if(io.toggle){io.toggle();paint()}else if(get()){keep();put(0)}else put(prev)};
     inp.onfocus=()=>inp.select();
     inp.oninput=()=>{inp.value=inp.value.replace(/\D/g,'').slice(0,3);if(inp.value!==''){put(inp.value,1);keep()}};
     inp.onkeydown=e=>{if(e.key==='Enter'){inp.blur();return}const d=e.key==='ArrowUp'?1:e.key==='ArrowDown'?-1:0;
       if(d){e.preventDefault();put(get()+d*(e.shiftKey?5:1));inp.value=get()}};
     inp.onblur=()=>{keep();paint()};
     paint();
-    return{set:v=>{put(v);keep()}};
+    return{set:v=>{put(v);keep()},paint,busy:()=>!!tq||sl.classList.contains('dr')||document.activeElement===inp||Date.now()-tl<1500};
   }
-  const volV=volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители','vol','vol');
-  volCtl($('vc2'),'Мне','Громкость копии плеера только для тебя (источник с role=me)','volMe','volMe');
+  const cfgVol=(key,msg)=>({get:()=>C[key],set:v=>{C[key]=v},send:v=>{saveC();send({t:msg,v})}});
+  const volV=volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители',cfgVol('vol','vol'));
+  volCtl($('vc2'),'Мне','Громкость копии плеера только для тебя (источник с role=me)',cfgVol('volMe','volMe'));
+  let AL={};
+  function alOp(o){fetch('/obs/alerts',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify(o)}).catch(()=>{})}
+  const alIO=(o,op,n,tip)=>({get:()=>o.v,set:v=>{o.v=v;o.at=Date.now()},send:v=>alOp({op,n,v:v/100}),muted:()=>o.mu,
+    toggle:()=>{o.mu=!o.mu;o.at=Date.now();alOp({op:op==='M'?'mute':'mu',n,v:o.mu});alHead()},tip});
+  const alM={v:100,mu:false,at:0},alI=new Map(),alFresh=o=>Date.now()-o.at>1500;
+  const alMc=volCtl($('alm'),'Все','Общая громкость оверлеев в эфире (StreamElements, алерты, стрики)',
+    alIO(alM,'M',undefined,mu=>mu?'Оповещения не в эфире, тебе их слышно. Вернуть в эфир':'Убрать оповещения из эфира — ты их по-прежнему слышишь'));
+  function alHead(){$('alc').innerHTML='По отдельности · '+(AL.items||[]).length+ico('chev')}
+  let alWant=[],alOT=0;
+  function alOrder(){
+    const box=$('ali'),rows=alWant.map(n=>alI.get(n)).filter(Boolean);
+    clearTimeout(alOT);
+    if(rows.every((r,i)=>box.children[i]===r.el))return;
+    if(box.matches(':hover')||rows.some(r=>r.c.busy())){alOT=setTimeout(alOrder,700);return}
+    const top=new Map(rows.map(r=>[r.el,r.el.getBoundingClientRect().top]));
+    rows.forEach(r=>box.append(r.el));
+    if(box.offsetParent===null||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    rows.forEach(r=>{const d=top.get(r.el)-r.el.getBoundingClientRect().top;
+      if(d)r.el.animate([{transform:'translateY('+d+'px)'},{transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.8,.2,1)'})});
+  }
+  function alHint(){
+    const n=$('aln'),q=s=>'«'+esc(s)+'»';let h='';
+    if(AL.desk&&AL.me)h=AL.on
+      ?'<b>'+q(AL.desk)+' снова включён</b> — твоя копия музыки «Мне» опять попадает в эфир и звучит там дважды.'+
+        '<button class="alg" data-op="desk">Выключить '+q(AL.desk)+'</button>'
+      :'<b>Музыка в эфире звучит дважды.</b> '+q(AL.desk)+' записывает всё, что играет в твоих наушниках, — и твою копию «Мне» тоже. '+
+        'Собери оповещения в одну строку: оверлеи пойдут в эфир через OBS с той же громкостью, а '+q(AL.desk)+' выключится — музыка «Мне» '+
+        'останется только у тебя. Звук игры идёт своим захватом; если в эфир нужен Discord или другая программа — добавь для неё «Захват звука приложения».'+
+        '<button class="alg" data-op="collect">Собрать оповещения</button>';
+    n.innerHTML=h;n.hidden=!h;
+    const g=n.querySelector('.alg');if(g)g.onclick=()=>{g.disabled=true;g.textContent='Секунду…';alOp({op:g.dataset.op})};
+  }
+  function alUI(){
+    $('al').hidden=!AL.on;alHint();
+    if(!AL.on)return;
+    if(alFresh(alM)&&!alMc.busy()){alM.v=Math.round(AL.M*100);alM.mu=!!AL.mute}
+    alMc.paint();
+    const its=(AL.items||[]).slice().sort((a,b)=>(!!b.act-!!a.act)||a.n.localeCompare(b.n,'ru',{numeric:true})),names=new Set(its.map(x=>x.n));
+    for(const [n,r] of alI)if(!names.has(n)){r.el.remove();alI.delete(n)}
+    its.forEach((x,i)=>{
+      let r=alI.get(x.n);
+      if(!r){
+        const o={v:Math.round(x.v*100),mu:x.mu,at:0},el=document.createElement('div'),nx=its.slice(i+1).map(y=>alI.get(y.n)).find(Boolean);
+        $('ali').insertBefore(el,nx?nx.el:null);
+        const c=volCtl(el,x.n,x.n,alIO(o,'v',x.n,mu=>mu?'Включить «'+x.n+'»':'Выключить «'+x.n+'» — и в эфире, и у тебя'));
+        const d=document.createElement('button');d.className='ic ald';d.innerHTML=ico('x');
+        d.title='Убрать «'+x.n+'» из «Оповещений»: источник вернётся как был — ты его слышишь, в эфир он не идёт';
+        d.onclick=()=>{d.disabled=true;alOp({op:'drop',n:x.n})};el.append(d);
+        alI.set(x.n,r={o,el,c});
+      }
+      if(alFresh(r.o)&&!r.c.busy()){r.o.v=Math.round(x.v*100);r.o.mu=x.mu}
+      r.c.paint();r.el.classList.toggle('na',!x.act);
+      r.el.querySelector('.vl').title=x.n+(x.act?'':' — сейчас не в эфире: источник скрыт или не в текущей сцене');
+    });
+    alWant=its.map(x=>x.n);alOrder();
+    const ot=AL.other||[],ob=$('alo');
+    ob.innerHTML=ot.length?'<span>Не в «Оповещениях»:</span>'+ot.map((n,i)=>'<button class="alp" data-i="'+i+'" title="Вернуть в «Оповещения»">'+ico('inc')+esc(n)+'</button>').join(''):'';
+    ob.querySelectorAll('.alp').forEach(b=>b.onclick=()=>{b.disabled=true;alOp({op:'add',n:ot[+b.dataset.i]})});
+    alHead();
+  }
+  $('alx').onclick=()=>{const open=$('alx').getAttribute('aria-expanded')!=='true';$('alx').setAttribute('aria-expanded',open);$('all').hidden=!open;C.alOpen=open;saveC()};
+  if(C.alOpen){$('alx').setAttribute('aria-expanded','true');$('all').hidden=false}
+  let alRv=0;const alr=$('alr'),alrT=()=>{alr.textContent=Date.now()-alRv<4000?'Нажми ещё раз: оверлеи вернутся в «Звук рабочего стола»':'Вернуть звук оповещений как было'};
+  alr.onclick=()=>{if(Date.now()-alRv<4000){alRv=0;alOp({op:'revert'});toast('Звук оповещений — как было')}else{alRv=Date.now();setTimeout(alrT,4100)}alrT()};alrT();
+  fetch('/obs/alerts',{cache:'no-store'}).then(r=>r.json()).then(j=>{AL=j||{};alUI()}).catch(()=>{});
   const aud=$('aud');let aoT=0;aud.checked=!!C.audio;
   aud.onchange=()=>{C.audio=aud.checked;saveC();aoT=Date.now();send({t:'vis',a:C.audio?1:0});toast(C.audio?'На стриме только звук':'Видео снова на стриме')};
   $('lkp').onchange=e=>{C.likePl=e.target.value;saveC();renderAll()};
@@ -1367,7 +1459,8 @@ if(view&&ME){
   if(qe)log('Twitch: '+qe);
   let last=0,sig='';
   onmsg=m=>{
-    if(m.t==='st'){const gap=Date.now()-last;last=Date.now();
+    if(m.t==='al'){const was=!!AL.on;AL=m;alUI();if(was!==!!m.on)log(m.on?'Звук: оповещения собраны в «Оповещения»':'Звук: оповещения — как было')}
+    else if(m.t==='st'){const gap=Date.now()-last;last=Date.now();
       if(m.yt===0){if(!ytNo||gap>10000)ytNo=Date.now()}else{ytNo=0;px=null}
       const yb=ytBad();if(yb)pxAsk();setInfo(yb?'на связи, но YouTube в плеере не загружается':'на связи · в очереди '+m.q,!yb);
       if('ao' in m&&!!m.ao!==!!C.audio&&Date.now()-aoT>5000){aoT=Date.now();send({t:'vis',a:C.audio?1:0})}
@@ -2115,7 +2208,7 @@ if(view&&ME){
       '== Twitch','канал: '+$('twc').textContent+' · тип: '+(btype||'без статуса')+' · '+$('tws').textContent+' — '+$('st').textContent,
       'права входа: '+(twSc||String(C.sc||'').split(/[ +]/)).join(' '),'не хватает: '+missing().join(', '),
       'награда: '+$('twr').textContent+' · '+$('ords').textContent,'чат: '+(chatOn?'читаю':chatErr||'не нужен'),'',
-      '== Сейчас',JSON.stringify({now,pa,ql:ql.length,apl,yt:ytBad()?'не грузится':'ок',px,audio:!!C.audio}),'',
+      '== Сейчас',JSON.stringify({now,pa,ql:ql.length,apl,yt:ytBad()?'не грузится':'ок',px,al:AL,audio:!!C.audio}),'',
       '== Настройки панели (без токена и ключа)',JSON.stringify(cfg),'',
       '== История (последние 30)',...DB2.hist.slice(0,30).map(e=>[fdate(e.ts),e.s,e.u,e.src||'',e.id,(e.t||'').slice(0,60),e.r||''].join(' | ')),'',
       '== Браузер',navigator.userAgent].join('\n');

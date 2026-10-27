@@ -132,6 +132,35 @@ const body=(req,max,cb)=>{let b='';req.on('data',d=>{b+=d;if(b.length>max)req.de
 const OPEN_OK=/^https:\/\/(t\.me\/vtuberstand|github\.com\/Bzden4ik\/OBS-Player)([\/?#][^\s"<>]*)?$/;
 const bus=m=>{m.n='s'+(++seq)+'-'+Date.now();log.push({id:seq,m});if(log.length>300)log.shift()};
 let panelSeen=0;
+const AL_F=path.join(__dirname,'obs-alerts.json'),AL_CMD=path.join(__dirname,'obs-alerts-cmd.txt');
+const AL_OPS=['M','mute','v','mu','drop','add','collect','revert','desk'];
+let AL={},alOps=[],alId=0;
+const vol01=x=>Math.max(0,Math.min(1,+x||0)),alNames=a=>Array.isArray(a)?a.slice(0,40).map(x=>String(x).slice(0,100)):[];
+function alWrite(){
+  alOps=alOps.filter(o=>Date.now()-o.id<15000);
+  if(!alOps.length){fs.unlink(AL_CMD,()=>{});return}
+  try{fs.writeFileSync(AL_CMD+'.tmp',alOps.map(o=>o.id+'\t'+o.op+'\t'+o.v+'\t'+o.n+'\n').join(''));fs.renameSync(AL_CMD+'.tmp',AL_CMD)}catch(e){}
+}
+function alRead(){
+  let j=null;try{j=JSON.parse(fs.readFileSync(AL_F,'utf8'))}catch(e){}
+  const o=j&&Date.now()/1000-(+j.t||0)<75?{on:!!j.on,M:vol01(j.M),mute:!!j.mute,desk:String(j.desk||'').slice(0,100),me:!!j.me,
+    items:Array.isArray(j.items)?j.items.slice(0,40).map(x=>({n:String(x&&x.n||'').slice(0,100),v:vol01(x&&x.v),mu:!!(x&&x.mu),act:!!(x&&x.act)})):[],
+    other:alNames(j.other)}:{};
+  const ack=j&&+j.ack||0;
+  if(ack&&alOps.some(x=>x.id<=ack)){alOps=alOps.filter(x=>x.id>ack);alWrite()}
+  if(JSON.stringify(o)!==JSON.stringify(AL)){AL=o;bus({t:'al',...AL})}
+}
+fs.watchFile(AL_F,{interval:500},alRead);setInterval(()=>{alRead();if(alOps.length)alWrite()},5000);alRead();
+function alOp(j){
+  const op=j&&j.op,n=j&&typeof j.n==='string'?j.n:'';
+  if(!AL_OPS.includes(op)||/[\t\r\n]/.test(n))return false;
+  const known=(AL.items||[]).some(x=>x.n===n);
+  if((op==='v'||op==='mu'||op==='drop')&&!known||op==='add'&&!(AL.other||[]).includes(n))return false;
+  const v=op==='M'||op==='v'?vol01(j.v).toFixed(4):op==='mute'||op==='mu'?(j.v?'1':'0'):'';
+  alId=Math.max(Date.now(),alId+1);
+  alOps=alOps.filter(x=>!(x.op===op&&x.n===n));alOps.push({id:alId,op,v,n});alWrite();
+  return true;
+}
 const ADV_F=path.join(__dirname,'adv.json');
 const CMDS=['skip','ban','skipback','banu','unban','stop','vol','off','help'];
 const LOGIN=/^[a-z0-9_]{1,25}$/,UID=/^\d{1,20}$/;
@@ -381,6 +410,10 @@ const srv=http.createServer((req,res)=>{
   if(u.pathname==='/quit'&&req.method==='POST'){head(res,204);res.end();setTimeout(()=>process.exit(0),100);return}
   if(u.pathname==='/ver'&&req.method==='GET'){json(res,{ver:VER,leaving:!!leaving});return}
   if(u.pathname==='/obs/px'&&req.method==='GET'){obsPx().then(r=>json(res,r));return}
+  if(u.pathname==='/obs/alerts'){
+    if(req.method==='POST'){body(req,500,j=>{if(!alOp(j)){head(res,400);res.end();return}head(res,204);res.end()});return}
+    json(res,AL);return;
+  }
   if(u.pathname==='/yt/info'&&req.method==='GET'){
     const id=u.searchParams.get('id');if(!ID.test(id||'')){head(res,400);res.end();return}
     Promise.all([ytInfo(id),GEO.cc&&Date.now()-GEO.at<6e5?GEO.cc:geo()]).then(([v,cc])=>json(res,{ok:true,cc,...v}),e=>json(res,{ok:false,err:e.message}));return;
