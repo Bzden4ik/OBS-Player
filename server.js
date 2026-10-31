@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.3',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.4',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -26,7 +26,7 @@ function fetchVia(url,o){
       resp=>{
         const st=resp.headers['content-encoding']==='gzip'?resp.pipe(zlib.createGunzip()):resp,ch=[];let n=0;
         st.on('data',d=>{n+=d.length;if(n>4e6)r.destroy();else ch.push(d)});
-        st.on('end',()=>{clearTimeout(t);res({status:resp.statusCode,body:Buffer.concat(ch).toString('utf8')})});
+        st.on('end',()=>{clearTimeout(t);res({status:resp.statusCode,body:Buffer.concat(ch).toString('utf8'),headers:resp.headers})});
         st.on('error',e=>{clearTimeout(t);rej(e)});
       });
     r.on('error',e=>{clearTimeout(t);rej(e)});
@@ -66,31 +66,6 @@ async function ytInfo(id){
   if(!o.bot)INFO.set(id,{v:o,at:Date.now()});
   if(INFO.size>300)INFO.delete(INFO.keys().next().value);
   return o;
-}
-const VR={ver:'1.62.27',ua:'com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip'};
-async function captions(id){
-  const r=await fetchVia('https://www.youtube.com/youtubei/v1/player?prettyPrint=false',{method:'POST',ua:VR.ua,
-    headers:{'Content-Type':'application/json','X-YouTube-Client-Name':'28','X-YouTube-Client-Version':VR.ver},
-    body:JSON.stringify({context:{client:{clientName:'ANDROID_VR',clientVersion:VR.ver,deviceMake:'Oculus',deviceModel:'Quest 3',androidSdkVersion:32,osName:'Android',osVersion:'12L',hl:'en'}},videoId:id,contentCheckOk:true,racyCheckOk:true})});
-  const ct=((JSON.parse(r.body).captions||{}).playerCaptionsTracklistRenderer||{}).captionTracks||[];
-  const t=ct.find(c=>c.kind==='asr')||ct[0];if(!t)return '';
-  const x=await fetchVia(t.baseUrl,{ua:VR.ua});
-  return x.body.replace(/<[^>]+>/g,' ').replace(/&#(\d+);/g,(m,n)=>String.fromCharCode(n)).replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim().slice(0,30000);
-}
-function songOf(title,author){
-  let t=title.replace(/\([^)]*\)|\[[^\]]*\]|【[^】]*】/g,' ').replace(/\b(official|music|lyrics?|video|audio|visuali[sz]er|hd|4k|mv|m\/v)\b/gi,' ').replace(/\s+/g,' ').trim();
-  let a=author.replace(/\s*-\s*Topic$/i,'').replace(/VEVO$/i,'').trim(),s=t;
-  const d=t.match(/^(.+?)\s+[-–—|]\s+(.+)$/);if(d){a=d[1];s=d[2]}
-  s=s.replace(/\s+(ft|feat|featuring)\.?\s.*$/i,'').replace(/["“”«»]/g,'').trim();
-  a=a.replace(/\s+(ft|feat|featuring|x)\.?\s.*$/i,'').replace(/\s*[,&].*$/,'').trim();
-  return{a,s,t};
-}
-async function lyrics(title,author,len){
-  const {a,s,t}=songOf(title,author),get=async q=>{const r=await fetchVia('https://lrclib.net/api/search?'+q,{yt:true,ua:'redeem-player/1.0 (stream overlay)'});return r.status===200?JSON.parse(r.body):[]};
-  const pick=l=>(l||[]).filter(x=>x.plainLyrics&&(!len||Math.abs((x.duration||0)-len)<=15))[0];
-  let x=a&&s?pick(await get('track_name='+encodeURIComponent(s)+'&artist_name='+encodeURIComponent(a))):null;
-  if(!x)x=pick(await get('q='+encodeURIComponent(t)));
-  return x?{text:x.plainLyrics.slice(0,30000),src:x.artistName+' — '+x.trackName}:null;
 }
 const ID=/^[\w-]{11}$/;
 const json=(res,o)=>{head(res,200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(o))};
@@ -417,14 +392,6 @@ const srv=http.createServer((req,res)=>{
   if(u.pathname==='/yt/info'&&req.method==='GET'){
     const id=u.searchParams.get('id');if(!ID.test(id||'')){head(res,400);res.end();return}
     Promise.all([ytInfo(id),GEO.cc&&Date.now()-GEO.at<6e5?GEO.cc:geo()]).then(([v,cc])=>json(res,{ok:true,cc,...v}),e=>json(res,{ok:false,err:e.message}));return;
-  }
-  if(u.pathname==='/yt/text'&&req.method==='GET'){
-    const q=u.searchParams,id=q.get('id');if(!ID.test(id||'')){head(res,400);res.end();return}
-    const o={cap:'',lyr:'',lyrSrc:''};
-    Promise.all([
-      q.get('cap')==='1'?captions(id).then(t=>{o.cap=t},e=>{o.capErr=e.message}):0,
-      lyrics(q.get('t')||'',q.get('a')||'',+q.get('len')||0).then(l=>{if(l){o.lyr=l.text;o.lyrSrc=l.src}},e=>{o.lyrErr=e.message})
-    ]).then(()=>json(res,o));return;
   }
   if(u.pathname==='/open'&&req.method==='POST'){
     body(req,500,j=>{

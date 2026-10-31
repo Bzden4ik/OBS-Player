@@ -415,13 +415,13 @@ body.stg{overflow:auto;font-size:13.5px}
         <div class="seg md" id="d_mode" role="radiogroup" aria-label="Если трек длиннее"><button type="button" data-v="cut">обрезать трек</button><button type="button" data-v="reject">отклонять заказ</button></div></div>
       <div class="lr"><input type="checkbox" class="tg" id="b_on"><label class="sw" for="b_on"></label><label class="lt" for="b_on"><b>Банлист <span class="cnt" id="bs">0</span></b><i>не пускать видео из списка</i></label>
         <details class="md"><summary>Показать список</summary><div id="bl"></div></details></div>
-      <div class="lr"><input type="checkbox" class="tg" id="w_on"><label class="sw" for="w_on"></label><label class="lt" for="w_on"><b>Запрещённые слова</b><i>название, описание, теги, текст песни и речь в видео</i></label>
+      <div class="lr"><input type="checkbox" class="tg" id="w_on"><label class="sw" for="w_on"></label><label class="lt" for="w_on"><b>Запрещённые слова</b><i>название, канал, описание и теги</i></label>
         <details class="md"><summary>Настроить</summary><div class="ms">
           <label class="lim"><input type="checkbox" class="tg" id="w_hate"><span class="sw sm"></span>язык вражды — за него Twitch банит</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_am"><span class="sw sm"></span>фильтр AutoMod самого Twitch</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_tw"><span class="sw sm"></span>запрещённые слова канала на Twitch</label>
-          <label class="lim"><input type="checkbox" class="tg" id="w_txt"><span class="sw sm"></span>текст песни и речь в видео</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_mat"><span class="sw sm"></span>мат (Twitch его не запрещает)</label>
+          <div class="hint">Проверяются доступные название ролика, название канала, описание и теги. Звук и слова внутри видео не проверяются.</div>
           <textarea id="w_my" rows="3" placeholder="Свои слова, по одному в строке. слово* — с любым окончанием" aria-label="Свои запрещённые слова"></textarea>
           <div class="hint" id="winfo"></div></div></details></div>
       <div class="lr"><input type="checkbox" class="tg" id="q_on"><label class="sw" for="q_on"></label><label class="lt" for="q_on"><b>Повторы</b><i>не пускать трек, который уже играет или в очереди</i></label></div>
@@ -558,7 +558,7 @@ function dbDraw(){
 addEventListener('error',e=>dbg('ОШИБКА JS',e.message+' (строка '+e.lineno+')'));
 addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.reason)));
 const KEY='ytq-cfg',LIKES='❤ Лайки';
-const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_txt:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
+const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
@@ -1296,7 +1296,7 @@ if(view&&ME){
   }
   document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   ['cid','tok','flt','yk'].forEach(k=>{const el=$(k);el.value=C[k];el.oninput=()=>{C[k]=el.value.trim();saveC()}});
-  ['v_on','l_on','d_on','b_on','q_on','mus_on','chat_on','w_on','w_hate','w_am','w_tw','w_txt','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
+  ['v_on','l_on','d_on','b_on','q_on','mus_on','chat_on','w_on','w_hate','w_am','w_tw','w_mat','ord_auto'].forEach(k=>{const el=$(k);el.checked=C[k];
     el.onchange=()=>{C[k]=el.checked;saveC();if(k==='ord_auto')twSync();if(k==='chat_on')scopeUI();if(k[0]==='w'){wcomp=null;wInfo();if(k==='w_tw'&&C.w_tw&&uid)blocked()}}});
   $('pv').checked=C.pv!==false;$('pv').onchange=()=>{C.pv=$('pv').checked;saveC();pvLoad()};
   $('hist_wk').checked=C.hist_wk;histUI();
@@ -1518,9 +1518,25 @@ if(view&&ME){
       embed:st.embeddable!==false,live:!!sn.liveBroadcastContent&&sn.liveBroadcastContent!=='none',
       age:(cd.contentRating||{}).ytRating==='ytAgeRestricted',blocked:rr.blocked||null,allowed:rr.allowed||null};
   }
-  let WL={hate:[],mat:[],except:[]},twTerms=[],wcomp=null;
-  fetch('/banned-words.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)
-    .then(j=>{if(j){WL={hate:j.hate||[],mat:j.mat||[],except:(j.except||[]).map(s=>nrm(s))};wcomp=null;wInfo()}}).catch(()=>{});
+  let WL={hate:[],mat:[],except:[]},twTerms=[],wcomp=null,wlReady=false,wlErr='',wlJob=null,
+    twAt=0,twFor='',twErr='',twJob=null;
+  function loadWords(){
+    if(wlReady)return Promise.resolve(true);
+    if(wlJob)return wlJob;
+    wlJob=(async()=>{
+      try{
+        const r=await fetch('/banned-words.json',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        const j=await r.json();
+        if(!j||!['hate','mat','except'].every(k=>Array.isArray(j[k])&&j[k].every(x=>typeof x==='string'&&x.trim().replace(/\*/g,'')))||!j.hate.length||!j.mat.length)
+          throw new Error('повреждённый список');
+        WL={hate:j.hate,mat:j.mat,except:j.except.map(s=>nrm(s))};wlReady=true;wlErr='';wcomp=null;return true;
+      }catch(e){wlErr=e.message;return false}
+      finally{wlJob=null;wInfo()}
+    })();
+    return wlJob;
+  }
+  loadWords();
   const HG={a:'aа@4',b:'bь6',c:'cс',e:'eе3',g:'g9',h:'hн',i:'iі1!|',k:'kк',l:'l1|',m:'mм',n:'nп',o:'oо0',p:'pр',s:'s$5',t:'tт7',u:'uи',x:'xх',y:'yу',
     'а':'аa@4','б':'б6','в':'вb8','г':'гr','е':'еe3','з':'з3','и':'иui1','к':'кk','м':'мm','н':'нh','о':'оo0','п':'пn','р':'рp','с':'сc','т':'тt','у':'уy','х':'хx','ч':'ч4','ш':'шw','ь':'ьb'};
   const nrm=s=>String(s).normalize('NFKD').replace(/[̀-ͯ​-‏⁠﻿­]/g,'').toLowerCase();
@@ -1535,15 +1551,15 @@ if(view&&ME){
     if(C.w_hate)add(WL.hate,'hate');if(C.w_mat)add(WL.mat,'mat');if(C.w_tw)add(twTerms,'tw');add(myWords(),'my');
     return wcomp=out;
   }
-  const SEPS='.-_*·';
+  const SEPS=' .-_*·\t\r\n';
   function prep(t){
     const cp=[...t],n=cp.length,ids=new Map(),cid=new Uint32Array(n),ch=[],lnD=[],spD=[],sepD=[];
     for(let i=0;i<n;i++){const c=cp[i];let d=ids.get(c);
-      if(d===undefined){d=ch.length;ids.set(c,d);ch.push(c);lnD.push(/[\p{L}\p{N}]/u.test(c)?1:0);spD.push(/[\s\W_]/u.test(c)?1:0);sepD.push(SEPS.includes(c)?1:0)}
+      if(d===undefined){d=ch.length;ids.set(c,d);ch.push(c);lnD.push(/[\p{L}\p{N}]/u.test(c)?1:0);spD.push(/[^\p{L}\p{N}]/u.test(c)?1:0);sepD.push(SEPS.includes(c)?1:0)}
       cid[i]=d}
     const ln=i=>i>=0&&i<n&&lnD[cid[i]]===1,exc=new Int8Array(n);
     const isExc=i=>{
-      if(!exc[i]){let w='';for(let k=i;k<n&&w.length<64;k++){if(lnD[cid[k]])w+=cp[k];else if(!sepD[cid[k]])break}
+      if(!exc[i]){let w='';for(let k=i;k<n&&w.length<64;k++){if(lnD[cid[k]])w+=cp[k];else if(!sepD[cid[k]]||/\s/.test(cp[k]))break}
         exc[i]=WL.except.some(e=>w.startsWith(e))?1:-1}
       return exc[i]===1};
     return{n,cid,ch,spD,sepD,ln,isExc};
@@ -1554,7 +1570,8 @@ if(view&&ME){
     if(!M[0].includes(1))return false;
     let a0=new Uint8Array(m),a1=new Uint8Array(m),a2=new Uint8Array(m),b0=new Uint8Array(m),b1=new Uint8Array(m),b2=new Uint8Array(m),live=false;
     for(let i=0;i<n;i++){
-      const d=T.cid[i],sp=T.sepD[d],st=M[0][d]&&(x.pre||!T.ln(i-1))&&!T.isExc(i)?1:0;
+      const d=T.cid[i],sp=T.sepD[d],st=M[0][d]&&(x.pre||!T.ln(i-1))&&
+        !((x.cat==='hate'||x.cat==='mat')&&T.isExc(i))?1:0;
       if(!live&&!st)continue;
       live=false;
       for(let j=0;j<m;j++){
@@ -1577,22 +1594,41 @@ if(view&&ME){
   function wInfo(){
     const a=[];if(C.w_hate)a.push('список '+WL.hate.length);if(C.w_mat)a.push('мат '+WL.mat.length);
     if(C.w_tw)a.push('канал '+twTerms.length);a.push('свои '+myWords().length);
-    $('winfo').textContent='В проверке: '+a.join(' · ')+(C.w_am&&amErr?'. AutoMod: '+amErr:'');
+    const err=[];
+    if((C.w_hate||C.w_mat)&&!wlReady)err.push('список слов: '+(wlErr||'загружается'));
+    if(C.w_tw&&(twErr||twFor!==uid||!twAt))err.push('слова канала: '+(twErr||'ещё не загружены'));
+    if(C.w_am&&amErr)err.push('AutoMod: '+amErr);
+    $('winfo').textContent='В проверке: '+a.join(' · ')+(err.length?'. '+err.join('. '):'');
   }
-  let amUntil=0,amErr='';
+  let amUntil=0,amErr='',amAuth='';
   const chunks=(t,n)=>{const o=[];t=String(t||'').replace(/\s+/g,' ').trim();while(t){let i=t.length<=n?t.length:t.lastIndexOf(' ',n);if(i<=0)i=n;o.push(t.slice(0,i));t=t.slice(i).trim()}return o};
   async function automod(parts){
-    if(!C.w_am||!uid||!C.tok||Date.now()<amUntil)return null;
-    const data=[];parts.forEach((p,i)=>chunks(p.text,450).forEach((c,j)=>{if(data.length<100)data.push({msg_id:i+'_'+j,msg_text:c})}));
-    if(!data.length)return null;
+    if(!C.w_am)return{ok:true};
+    const fail=(err,wait=60000)=>{amErr=err;amUntil=Date.now()+wait;wInfo();return{ok:false,err}};
+    if(!uid||!C.tok)return fail('Twitch не подключён');
+    if(amAuth!==C.tok){amAuth=C.tok;amUntil=0;amErr=''}
+    if(Date.now()<amUntil)return{ok:false,err:amErr};
+    const data=[];parts.forEach((p,i)=>chunks(p.text,450).forEach((c,j)=>data.push({msg_id:i+'_'+j,msg_text:c})));
+    if(!data.length)return fail('нет текста для проверки');
     try{
-      const r=await fetch('https://api.twitch.tv/helix/moderation/enforcements/status?broadcaster_id='+uid,{method:'POST',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({data})});
-      if(r.status===429){const t=+r.headers.get('Ratelimit-Reset');amUntil=t?t*1000:Date.now()+6e4;amErr='лимит запросов Twitch, пока проверяю только списком';wInfo();return null}
-      if(!r.ok){const p=r.status===401||r.status===403;amErr=p?'нет прав — нажми «Обновить»':'ошибка '+r.status;amUntil=Date.now()+(p?6e5:6e4);wInfo();return null}
+      for(let at=0;at<data.length;at+=100){
+        const batch=data.slice(at,at+100);
+        const r=await fetch('https://api.twitch.tv/helix/moderation/enforcements/status?broadcaster_id='+uid,{method:'POST',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({data:batch}),signal:AbortSignal.timeout(15000)});
+        if(r.status===429)return fail('достигнут лимит проверок Twitch, попробуй позже');
+        if(!r.ok){const p=r.status===401||r.status===403;return fail(p?'нет прав — нажми «Обновить»':'HTTP '+r.status,p?600000:60000)}
+        const j=await r.json(),answers=new Map();
+        if(!Array.isArray(j.data)||j.data.length!==batch.length)return fail('Twitch вернул неполный результат проверки');
+        for(const x of j.data){
+          if(!x||typeof x.is_permitted!=='boolean'||answers.has(x.msg_id))return fail('Twitch вернул некорректный результат проверки');
+          answers.set(x.msg_id,x.is_permitted);
+        }
+        if(batch.some(x=>!answers.has(x.msg_id)))return fail('Twitch проверил не все фрагменты текста');
+        const bad=batch.find(x=>!answers.get(x.msg_id));
+        if(bad)return{ok:true,blocked:parts[+bad.msg_id.split('_')[0]].src};
+      }
       if(amErr){amErr='';wInfo()}
-      const bad=((await r.json()).data||[]).find(x=>!x.is_permitted);
-      return bad?parts[+bad.msg_id.split('_')[0]].src:false;
-    }catch(e){return null}
+      return{ok:true};
+    }catch(e){return fail('проверка недоступна: '+e.message)}
   }
   const NOISE=/мел(ом)? по доске|ногт\S* по доске|скрип мела|скрежет|chalkboard|nails on|ear ?rape|scream(er)?s? (compilation|сборник)|скример|sound effects?|звуков\S* эффект|(^|[^a-z])sfx([^a-z]|$)|10 hours|10 часов|siren sound|police siren|air raid|звук сирены|сирена (скорой|полиц|воздушн|тревог)|сигнализац|alarm sound|звук будильника|громк\S* звук/i;
   const MUSICISH=/official (music )?video|official audio|lyric|караоке|(^|[^a-z])m\/?v([^a-z]|$)|remix|(^|[^a-z])cover([^a-z]|$)|кавер|nightcore|sped up|slowed|reverb|(^|[^a-z])ost([^a-z]|$)|soundtrack|саундтрек|feat\.|(^|[^a-z])ft\.|клип|песн|(^|[^a-z])song|альбом|album|instrumental|минус(овка)?([^а-я]|$)|phonk|фонк|music|музык/i;
@@ -1662,18 +1698,23 @@ if(view&&ME){
         if(r.status===404||r.status===400)return no('видео не найдено',GONE);
         if(r.ok){const j=await r.json();title=j.title||'';author=j.author_name||''}}catch(e){}
       if(!title)return no('не удалось получить название для проверки',NOCHK);
-      const parts=[{src:'название',text:title},{src:'название канала',text:author},
-        {src:'описание',text:(api&&api.desc)||(inf&&inf.desc)||''},{src:'теги',text:((api&&api.kw)||(inf&&inf.kw)||[]).join(', ')}];
-      if(C.w_txt)try{
-        const t=await yget('/yt/text?id='+id+'&cap=1&t='+encodeURIComponent(title)+'&a='+encodeURIComponent(author)+'&len='+sec);
-        if(t.lyr)parts.push({src:'текст песни',text:t.lyr});if(t.cap)parts.push({src:'речь в видео',text:t.cap});
-        dbg('тексты для проверки',(t.lyr?'песня: '+t.lyrSrc:'текст песни не найден')+' · '+(t.cap?'субтитры: '+t.cap.length+' симв.':'субтитров нет'+(t.capErr?' ('+t.capErr+')':'')));
-      }catch(e){dbg('тексты для проверки','ошибка: '+e.message)}
+      if((C.w_hate||C.w_mat)&&!await loadWords())return no('не загрузился список запрещённых слов: '+wlErr,'список запрещённых слов недоступен, попробуй позже');
+      if(C.w_tw&&!await blocked())return no('не удалось загрузить слова канала: '+twErr,'не удалось проверить запрещённые слова канала, попробуй позже');
+      const parts=[];
+      const addPart=(src,text)=>{
+        if(typeof text==='string'&&text.trim()&&!parts.some(p=>p.src===src&&p.text===text))parts.push({src,text});
+      };
+      for(const data of [api,inf])if(data){
+        addPart('название',data.title);addPart('название канала',data.author);addPart('описание',data.desc);
+        if(Array.isArray(data.kw))addPart('теги',data.kw.filter(t=>typeof t==='string').join(', '));
+      }
+      addPart('название',title);addPart('название канала',author);
       for(const p of parts){const w=badWord(p.text);
         if(w)return no('слово «'+mask(w.w)+'» — '+p.src+(w.cat==='tw'?' (слова канала)':w.cat==='my'?' (свой список)':''),
           'в видео есть слова, '+(w.cat==='hate'?'запрещённые на Twitch':'запрещённые на канале')+' ('+p.src+')')}
       const am=await automod(parts);
-      if(am)return no('AutoMod Twitch не пропускает: '+am,'фильтр Twitch (AutoMod) не пропускает '+am);
+      if(!am.ok)return no('не удалось проверить AutoMod: '+am.err,'проверка Twitch (AutoMod) недоступна, попробуй позже');
+      if(am.blocked)return no('AutoMod Twitch не пропускает: '+am.blocked,'фильтр Twitch (AutoMod) не пропускает '+am.blocked);
     }
     return{ok:true,cut:cutMode?lim:0,title};
   }
@@ -1958,14 +1999,30 @@ if(view&&ME){
       C.flt=title;$('flt').value=title;saveC();toast('Награда «'+title+'» создана');log('Создана награда «'+title+'» за '+cost);rewards();
     }catch(e){toast('Нет связи с Twitch')}
   }
-  async function blocked(){
-    if(!C.w_tw||!uid)return;
-    const out=[];let cur='';
-    try{for(let i=0;i<20;i++){
-      const r=await fetch('https://api.twitch.tv/helix/moderation/blocked_terms?broadcaster_id='+uid+'&moderator_id='+uid+'&first=100'+(cur?'&after='+cur:''),{headers:H()});
-      if(!r.ok)break;const j=await r.json();(j.data||[]).forEach(t=>out.push(t.text));
-      cur=j.pagination&&j.pagination.cursor;if(!cur)break}}catch(e){}
-    twTerms=out;wcomp=null;wInfo();
+  function blocked(){
+    if(!C.w_tw)return Promise.resolve(true);
+    if(!uid||!C.tok){twErr='Twitch не подключён';return Promise.resolve(false)}
+    if(twJob)return twJob;
+    if(twFor===uid&&twAt&&Date.now()-twAt<300000)return Promise.resolve(true);
+    const who=uid,token=C.tok;
+    twJob=(async()=>{
+      const out=[];let cur='';
+      try{
+        for(let i=0;i<20;i++){
+          const r=await fetch('https://api.twitch.tv/helix/moderation/blocked_terms?broadcaster_id='+who+'&moderator_id='+who+'&first=100'+(cur?'&after='+encodeURIComponent(cur):''),{headers:H(),signal:AbortSignal.timeout(15000)});
+          if(!r.ok)throw new Error(r.status===401||r.status===403?'нет прав — нажми «Обновить»':'HTTP '+r.status);
+          const j=await r.json();
+          if(!Array.isArray(j.data)||j.data.some(t=>!t||typeof t.text!=='string'))throw new Error('повреждённый список слов канала');
+          j.data.forEach(t=>out.push(t.text));cur=j.pagination&&j.pagination.cursor||'';
+          if(!cur)break;
+        }
+        if(cur)throw new Error('не удалось загрузить весь список слов канала');
+        if(uid!==who||C.tok!==token)throw new Error('аккаунт изменился во время проверки');
+        twTerms=out;twFor=who;twAt=Date.now();twErr='';wcomp=null;return true;
+      }catch(e){twErr=e.message;return false}
+      finally{twJob=null;wInfo()}
+    })();
+    return twJob;
   }
   const chatT=[],chatTo=new Map();
   function chatLimit(who,kind){
