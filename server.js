@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.4',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.5',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -67,6 +67,110 @@ async function ytInfo(id){
   if(INFO.size>300)INFO.delete(INFO.keys().next().value);
   return o;
 }
+const SPEECH_MAX=60000,VR_VERSION='1.65.10';
+const VR_UA='com.google.android.apps.youtube.vr.oculus/'+VR_VERSION+' (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip';
+const speechCache=new Map(),speechPending=new Map();
+let speechEpoch=0;
+function speechReset(){speechEpoch++;speechCache.clear()}
+function captionText(body){
+  let text;
+  if(/^\s*\{/.test(body)){
+    const data=JSON.parse(body);
+    if(!Array.isArray(data.events))throw new Error('неизвестный формат субтитров');
+    const lines=[];
+    for(const event of data.events){
+      if(!event||typeof event!=='object')throw new Error('повреждённые субтитры');
+      if(event.segs===undefined)continue;
+      if(!Array.isArray(event.segs)||event.segs.some(s=>!s||typeof s.utf8!=='string'))throw new Error('повреждённые субтитры');
+      lines.push(event.segs.map(s=>s.utf8).join(''));
+    }
+    text=lines.join(' ');
+  }else{
+    const root=/^\s*(?:<\?xml[^>]*>\s*)?<(transcript|timedtext)\b/i.exec(body);
+    if(!root||!body.trimEnd().toLowerCase().endsWith('</'+root[1].toLowerCase()+'>'))throw new Error('неполный или неизвестный формат субтитров');
+    text=body.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi,' ').replace(/<[^>]+>/g,' ')
+      .replace(/&#(x[0-9a-f]+|\d+);/gi,(_,n)=>{
+        const value=n[0].toLowerCase()==='x'?parseInt(n.slice(1),16):Number(n);
+        return value>0&&value<=0x10ffff?String.fromCodePoint(value):' ';
+      }).replace(/&(?:lt|gt|quot|apos|amp);/g,m=>({'&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&amp;':'&'})[m]);
+  }
+  text=text.replace(/\s+/g,' ').trim();
+  if(text.length>SPEECH_MAX)throw new Error('субтитры слишком длинные для полной проверки');
+  return text;
+}
+function speechUnavailable(id,reason){return{status:'unavailable',videoId:id,reason}}
+function speechHttp(result,step){
+  if(result.status!==200)throw new Error('YouTube: HTTP '+result.status+' ('+step+')');
+}
+async function loadSpeech(id,epoch){
+  const ask=async(url,options)=>{
+    if(epoch!==speechEpoch)throw new Error('сменился маршрут YouTube');
+    const result=await fetchVia(url,{timeout:6500,...options});
+    if(epoch!==speechEpoch)throw new Error('сменился маршрут YouTube');
+    return result;
+  };
+  const watch=await ask('https://www.youtube.com/watch?v='+id+'&hl=en');
+  speechHttp(watch,'страница видео');
+  const visitor=/"(?:VISITOR_DATA|visitorData)"\s*:\s*"([A-Za-z0-9_%=+/-]{8,4096})"/.exec(watch.body)?.[1];
+  if(!visitor)throw new Error('YouTube не выдал данные гостевой сессии');
+  const player=await ask('https://www.youtube.com/youtubei/v1/player?prettyPrint=false',{method:'POST',ua:VR_UA,
+    headers:{'Content-Type':'application/json','X-YouTube-Client-Name':'28','X-YouTube-Client-Version':VR_VERSION,'X-Goog-Visitor-Id':visitor},
+    body:JSON.stringify({context:{client:{clientName:'ANDROID_VR',clientVersion:VR_VERSION,deviceMake:'Oculus',deviceModel:'Quest 3',
+      androidSdkVersion:32,osName:'Android',osVersion:'12L',hl:'en',visitorData:visitor}},videoId:id,contentCheckOk:true,racyCheckOk:true})});
+  speechHttp(player,'данные субтитров');
+  let data;
+  try{data=JSON.parse(player.body)}catch(e){throw new Error('YouTube вернул повреждённые данные субтитров')}
+  const play=data?.playabilityStatus;
+  if(play?.status!=='OK'){
+    if(/not a bot/i.test(play?.reason||''))throw new Error('YouTube не подтвердил гостевую сессию');
+    throw new Error('YouTube не открыл дорожки субтитров');
+  }
+  if(data.videoDetails?.videoId!==id)throw new Error('YouTube вернул данные другого ролика');
+  const tracks=data.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+  const automatic=Array.isArray(tracks)?tracks.filter(t=>t?.kind==='asr'):[];
+  const track=automatic.find(t=>t.languageCode==='ru')||automatic[0];
+  if(!track)return speechUnavailable(id,'У ролика нет автоматических субтитров');
+  let target;
+  try{target=new URL(track.baseUrl)}catch(e){throw new Error('неподходящий адрес субтитров')}
+  const params=target.searchParams;
+  if(target.protocol!=='https:'||target.username||target.password||target.port||
+    !['www.youtube.com','youtube.com'].includes(target.hostname)||target.pathname!=='/api/timedtext'||
+    params.getAll('v').length!==1||params.get('v')!==id||params.getAll('kind').length!==1||params.get('kind')!=='asr'||
+    params.has('tlang')||params.get('lang')!==track.languageCode||!params.get('lang'))throw new Error('неподходящий адрес субтитров');
+  let text='',reason='';
+  for(const format of ['json3','srv3']){
+    params.set('fmt',format);
+    if(format==='srv3')params.delete('xosf');
+    const response=await ask(target.href,{ua:VR_UA});
+    speechHttp(response,'текст субтитров');
+    reason='YouTube вернул пустой текст субтитров';
+    if(!response.body.trim())continue;
+    try{text=captionText(response.body)}catch(e){reason=e instanceof SyntaxError?'повреждённые субтитры':e.message}
+    if(text)break;
+  }
+  if(!text)return speechUnavailable(id,reason);
+  const result={status:'ok',videoId:id,kind:'asr',language:track.languageCode,text};
+  if(/\[\s*[_*]{2,}\s*\]/u.test(text))return{...result,status:'unavailable',reason:'YouTube замаскировал часть речи в субтитрах'};
+  if(!/\p{L}/u.test(text.replace(/\[[^\]]*\]|\([^)]*\)/g,' ')))return{...result,status:'unavailable',reason:'В субтитрах есть только звуки'};
+  return result;
+}
+function speech(id){
+  const epoch=speechEpoch,key=epoch+':'+id;
+  const cached=speechCache.get(key);
+  if(cached&&cached.until>Date.now())return Promise.resolve(cached.result);
+  if(speechPending.has(key))return speechPending.get(key);
+  if(speechPending.size>=3)return Promise.resolve(speechUnavailable(id,'Проверка субтитров занята'));
+  const job=loadSpeech(id,epoch).catch(e=>speechUnavailable(id,e.message)).then(result=>{
+    if(epoch===speechEpoch){
+      speechCache.delete(key);
+      speechCache.set(key,{until:Date.now()+(result.status==='ok'?21600000:15000),result});
+      if(speechCache.size>100)speechCache.delete(speechCache.keys().next().value);
+    }
+    return result;
+  }).finally(()=>speechPending.delete(key));
+  speechPending.set(key,job);
+  return job;
+}
 const ID=/^[\w-]{11}$/;
 const json=(res,o)=>{head(res,200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(o))};
 let PLAYS={};try{PLAYS=JSON.parse(fs.readFileSync(PLAYS_F,'utf8'))||{}}catch(e){}
@@ -120,7 +224,7 @@ function alRead(){
   let j=null;try{j=JSON.parse(fs.readFileSync(AL_F,'utf8'))}catch(e){}
   const o=j&&Date.now()/1000-(+j.t||0)<75?{on:!!j.on,M:vol01(j.M),mute:!!j.mute,desk:String(j.desk||'').slice(0,100),me:!!j.me,
     items:Array.isArray(j.items)?j.items.slice(0,40).map(x=>({n:String(x&&x.n||'').slice(0,100),v:vol01(x&&x.v),mu:!!(x&&x.mu),act:!!(x&&x.act)})):[],
-    other:alNames(j.other)}:{};
+    other:alNames(j.other),meActive:typeof j.meActive==='boolean'?j.meActive:undefined}:{};
   const ack=j&&+j.ack||0;
   if(ack&&alOps.some(x=>x.id<=ack)){alOps=alOps.filter(x=>x.id>ack);alWrite()}
   if(JSON.stringify(o)!==JSON.stringify(AL)){AL=o;bus({t:'al',...AL})}
@@ -392,6 +496,11 @@ const srv=http.createServer((req,res)=>{
   if(u.pathname==='/yt/info'&&req.method==='GET'){
     const id=u.searchParams.get('id');if(!ID.test(id||'')){head(res,400);res.end();return}
     Promise.all([ytInfo(id),GEO.cc&&Date.now()-GEO.at<6e5?GEO.cc:geo()]).then(([v,cc])=>json(res,{ok:true,cc,...v}),e=>json(res,{ok:false,err:e.message}));return;
+  }
+  if(u.pathname==='/yt/speech'&&req.method==='GET'){
+    const id=u.searchParams.get('id');
+    if(!ID.test(id||'')){head(res,400);res.end();return}
+    speech(id).then(result=>json(res,result));return;
   }
   if(u.pathname==='/open'&&req.method==='POST'){
     body(req,500,j=>{

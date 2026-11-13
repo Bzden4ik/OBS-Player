@@ -421,7 +421,15 @@ body.stg{overflow:auto;font-size:13.5px}
           <label class="lim"><input type="checkbox" class="tg" id="w_am"><span class="sw sm"></span>фильтр AutoMod самого Twitch</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_tw"><span class="sw sm"></span>запрещённые слова канала на Twitch</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_mat"><span class="sw sm"></span>мат (Twitch его не запрещает)</label>
-          <div class="hint">Проверяются доступные название ролика, название канала, описание и теги. Звук и слова внутри видео не проверяются.</div>
+          <label class="lim"><input type="checkbox" class="tg" id="speech_on"><span class="sw sm"></span>Речь в видео по субтитрам YouTube</label>
+          <div id="speech_opts">
+            <div class="hint" id="speech_label">Если речь проверить не удалось</div>
+            <div class="seg" role="group" aria-labelledby="speech_label">
+              <button type="button" data-v="reject" aria-pressed="true">Отклонять</button>
+              <button type="button" data-v="allow" aria-pressed="false">Пропускать</button>
+            </div>
+            <div class="hint">Проверяются автоматические субтитры заказанного ролика. YouTube может пропустить или неверно распознать слова.</div>
+          </div>
           <textarea id="w_my" rows="3" placeholder="Свои слова, по одному в строке. слово* — с любым окончанием" aria-label="Свои запрещённые слова"></textarea>
           <div class="hint" id="winfo"></div></div></details></div>
       <div class="lr"><input type="checkbox" class="tg" id="q_on"><label class="sw" for="q_on"></label><label class="lt" for="q_on"><b>Повторы</b><i>не пускать трек, который уже играет или в очереди</i></label></div>
@@ -560,6 +568,8 @@ addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.rea
 const KEY='ytq-cfg',LIKES='❤ Лайки';
 const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
+C.speech_on=C.speech_on!==false;
+C.speech_unchecked=C.speech_unchecked==='allow'?'allow':'reject';
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
 let ch=null;try{ch=new BroadcastChannel('ytq')}catch(e){}
@@ -636,21 +646,49 @@ if(view&&ME){
   document.body.className='g';$('panel').style.display='none';
   $('box').style.width='480px';$('box').style.height='270px';
   dbg('Режим','плеер для стримера (без видео)');
-  let yt=null,ready=false,cur=null,ck=null,vm=+C.volMe;if(!(vm>=0&&vm<=100))vm=50;
+  let yt=null,ready=false,cur=null,ck=null,vm=+C.volMe,lastState=null,lastStateAt=0;
+  let sourceActive=null,sourceVisible=null,sceneMe=null,sceneUpdate=0;
+  if(!(vm>=0&&vm<=100))vm=50;
   const ID=/^[\w-]{11}$/;
+  const canHear=()=>sourceActive!==false&&sourceVisible!==false&&sceneMe!==false&&!document.hidden;
+  function syncPersonal(){
+    if(!ready)return;
+    if(!canHear()){
+      yt.mute();
+      if(cur){yt.stopVideo();cur=null;ck=null}
+      return;
+    }
+    if(!lastState||Date.now()-lastStateAt>7000)return;
+    const m=lastState;
+    if(m.cur!==cur||m.ck!==ck){
+      cur=ID.test(m.cur||'')?m.cur:null;ck=m.ck;
+      if(cur){
+        const tm=Math.max(0,Number(m.tm)||0);
+        if(m.pa)yt.cueVideoById({videoId:cur,startSeconds:tm});
+        else yt.loadVideoById({videoId:cur,startSeconds:tm});
+      }else yt.stopVideo();
+    }else if(cur){
+      if(Math.abs(yt.getCurrentTime()-(m.tm||0))>3)yt.seekTo(m.tm||0,true);
+      const ps=yt.getPlayerState();
+      if(m.pa&&(ps===1||ps===3))yt.pauseVideo();
+      else if(!m.pa&&(ps===2||ps===5))yt.playVideo();
+    }
+    yt.setVolume(vm);yt.unMute();
+  }
+  const personalSync=()=>{try{syncPersonal()}catch(e){}};
+  addEventListener('obsSourceActiveChanged',e=>{if(typeof e.detail?.active==='boolean'){sourceActive=e.detail.active;personalSync()}});
+  addEventListener('obsSourceVisibleChanged',e=>{if(typeof e.detail?.visible==='boolean'){sourceVisible=e.detail.visible;personalSync()}});
+  document.addEventListener('visibilitychange',personalSync);
+  const observeScene=m=>{sceneMe=typeof m.meActive==='boolean'?m.meActive:null;personalSync()};
+  fetch('/obs/alerts',{cache:'no-store'}).then(r=>r.json()).then(m=>{if(!sceneUpdate)observeScene(m)}).catch(()=>{});
   window.onYouTubeIframeAPIReady=()=>{if(yt)return;yt=new YT.Player('yt',{width:'100%',height:'100%',
-    playerVars:{autoplay:1,controls:0,rel:0,playsinline:1,origin:location.origin},
-    events:{onReady:()=>{ready=true;dbg('Плеер','готов');yt.setVolume(vm)},onError:e=>dbg('ОШИБКА YouTube',e.data)}})};
+    playerVars:{autoplay:0,controls:0,rel:0,playsinline:1,origin:location.origin},
+    events:{onReady:()=>{ready=true;dbg('Плеер','готов');personalSync()},onError:e=>dbg('ОШИБКА YouTube',e.data)}})};
   loadYT();
   onmsg=m=>{
-    if(m.t==='volMe'){vm=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',vm+'%');if(ready)yt.setVolume(vm)}
-    else if(m.t==='st'&&ready){
-      if(m.cur!==cur||m.ck!==ck){cur=m.cur;ck=m.ck;
-        if(cur&&ID.test(cur)){yt.loadVideoById({videoId:cur,startSeconds:m.tm||0});yt.setVolume(vm)}
-        else{try{yt.stopVideo()}catch(e){}}}
-      else if(cur){try{if(Math.abs(yt.getCurrentTime()-(m.tm||0))>3)yt.seekTo(m.tm||0,true)}catch(e){}}
-      try{const ps=yt.getPlayerState();if(m.pa&&ps===1)yt.pauseVideo();else if(!m.pa&&cur&&ps===2)yt.playVideo()}catch(e){}
-    }
+    if(m.t==='al'){sceneUpdate++;observeScene(m)}
+    else if(m.t==='volMe'){vm=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',vm+'%');if(ready&&canHear())yt.setVolume(vm)}
+    else if(m.t==='st'){lastState=m;lastStateAt=Date.now();personalSync()}
   };
 }else if(view){
   document.body.className='g';$('panel').style.display='none';
@@ -1201,7 +1239,8 @@ if(view&&ME){
       const busy=['queued','playing','checking'].includes(e.s);
       if(!busy&&VID.test(e.id||''))ex.push(btn('play','Включить',()=>{order(e.id,'из истории',true,{front:true,pl:1,t:e.t});toast(now.id?'Заиграет следующим':'Включаю')}));
       if(e.rid&&!e.rf&&!e.ff&&!busy)ex.push(cbtn('undo','Вернуть баллы',async()=>{if(await refundE(e))note(e,'стример вернул баллы за твой заказ')}));
-      const r=row(e,{sub:ftime(e.ts),st:e.s,r:e.r?'('+e.r+')':'',rf:e.rf,extra:ex,sc:'h',k:e.k});r.style.marginBottom='6px';b.append(r);
+      const info=e.r?'('+e.r+')':e.speechUnchecked?'(речь не проверена)':'';
+      const r=row(e,{sub:ftime(e.ts),st:e.s,r:info,rf:e.rf,extra:ex,sc:'h',k:e.k});r.style.marginBottom='6px';b.append(r);
     });
     if(list.length>hn){const m=document.createElement('button');m.className='w';m.textContent='Показать ещё ('+(list.length-hn)+')';m.onclick=()=>{hn+=40;renderHist()};b.append(m)}
   }
@@ -1302,6 +1341,15 @@ if(view&&ME){
   $('hist_wk').checked=C.hist_wk;histUI();
   $('hist_wk').onchange=()=>{C.hist_wk=$('hist_wk').checked;if(C.hist_wk)C.hist_t=Date.now();saveC();histUI();toast(C.hist_wk?'История будет чиститься раз в неделю':'История хранится вся')};
   $('w_my').value=C.w_my;$('w_my').oninput=()=>{C.w_my=$('w_my').value;saveC();wcomp=null;wInfo()};
+  const speechToggle=$('speech_on'),speechOptions=$('speech_opts'),speechButtons=speechOptions.querySelectorAll('button[data-v]');
+  const speechSettings=()=>{
+    speechOptions.hidden=!speechToggle.checked;
+    speechButtons.forEach(b=>{const selected=b.dataset.v===C.speech_unchecked;b.classList.toggle('on',selected);b.setAttribute('aria-pressed',selected)});
+  };
+  speechToggle.checked=C.speech_on;
+  speechToggle.onchange=()=>{C.speech_on=speechToggle.checked;saveC();speechSettings()};
+  speechButtons.forEach(b=>{b.onclick=()=>{C.speech_unchecked=b.dataset.v;saveC();speechSettings()}});
+  speechSettings();
   $('rwb').onclick=mkReward;
   const NF={v_n:{step:1000,min:0},l_n:{step:100,min:0},d_n:{step:.5,min:.5,dec:1},pl_pct:{step:5,min:50,max:100}};
   Object.keys(NF).forEach(k=>{
@@ -1415,7 +1463,7 @@ if(view&&ME){
         $('ali').insertBefore(el,nx?nx.el:null);
         const c=volCtl(el,x.n,x.n,alIO(o,'v',x.n,mu=>mu?'Включить «'+x.n+'»':'Выключить «'+x.n+'» — и в эфире, и у тебя'));
         const d=document.createElement('button');d.className='ic ald';d.innerHTML=ico('x');
-        d.title='Убрать «'+x.n+'» из «Оповещений»: источник вернётся как был — ты его слышишь, в эфир он не идёт';
+        d.title='Убрать «'+x.n+'» из «Оповещений» и вернуть прежние настройки звука';
         d.onclick=()=>{d.disabled=true;alOp({op:'drop',n:x.n})};el.append(d);
         alI.set(x.n,r={o,el,c});
       }
@@ -1692,7 +1740,7 @@ if(view&&ME){
     if(C.v_on){if(views==null)return no('не удалось узнать просмотры',NOCHK);if(views<C.v_n)return no('просмотров '+fmtN(views)+' < '+fmtN(C.v_n),'у видео меньше '+fmtN(C.v_n)+' просмотров')}
     if(C.l_on){if(!api)return no(C.yk?'не удалось узнать лайки':'для проверки лайков нужен ключ YouTube API',NOCHK);if(api.likes!=null&&api.likes<C.l_n)return no('лайков '+fmtN(api.likes)+' < '+fmtN(C.l_n),'у видео меньше '+fmtN(C.l_n)+' лайков')}
     if(rejMode){if(!sec)return no('не удалось узнать длительность',NOCHK);if(sec>lim)return no('длина '+fmt(sec)+' > '+fmt(lim),'видео длиннее '+fmtMin(lim))}
-    let title=(api&&api.title)||(inf&&inf.title)||'',author=(api&&api.author)||(inf&&inf.author)||'';
+    let title=(api&&api.title)||(inf&&inf.title)||'',author=(api&&api.author)||(inf&&inf.author)||'',speechReason='';
     if(C.w_on){
       if(!title)try{const r=await fetch('https://www.youtube.com/oembed?url='+encodeURIComponent(url(id))+'&format=json');
         if(r.status===404||r.status===400)return no('видео не найдено',GONE);
@@ -1709,14 +1757,35 @@ if(view&&ME){
         if(Array.isArray(data.kw))addPart('теги',data.kw.filter(t=>typeof t==='string').join(', '));
       }
       addPart('название',title);addPart('название канала',author);
-      for(const p of parts){const w=badWord(p.text);
-        if(w)return no('слово «'+mask(w.w)+'» — '+p.src+(w.cat==='tw'?' (слова канала)':w.cat==='my'?' (свой список)':''),
-          'в видео есть слова, '+(w.cat==='hate'?'запрещённые на Twitch':'запрещённые на канале')+' ('+p.src+')')}
+      const rejectWord=p=>{
+        const w=badWord(p.text);
+        return w?no('слово «'+mask(w.w)+'» — '+p.src+(w.cat==='tw'?' (слова канала)':w.cat==='my'?' (свой список)':''),
+          'в видео есть слова, '+(w.cat==='hate'?'запрещённые на Twitch':'запрещённые на канале')+' ('+p.src+')'):null;
+      };
+      for(const part of parts){const denied=rejectWord(part);if(denied)return denied}
+      if(C.speech_on!==false){
+        try{
+          const result=await yget('/yt/speech?id='+id);
+          const matching=result?.videoId===id&&result.kind==='asr';
+          const caption=matching&&typeof result.text==='string'&&result.text.length<=60000?result.text.trim():'';
+          if(caption){
+            const part={src:'речь в видео',text:caption};
+            const denied=rejectWord(part);
+            if(denied)return denied;
+            parts.push(part);
+          }
+          const complete=caption&&result.status==='ok'&&!/\[\s*[_*]{2,}\s*\]/u.test(caption)&&
+            /\p{L}/u.test(caption.replace(/\[[^\]]*\]|\([^)]*\)/g,' '));
+          if(!complete)speechReason=typeof result?.reason==='string'&&result.reason.trim()?result.reason.slice(0,180):'не получена автоматическая дорожка этого ролика';
+        }catch(e){speechReason=String(e.message||e).slice(0,180)}
+        if(speechReason)dbg('речь в видео',speechReason);
+      }
       const am=await automod(parts);
       if(!am.ok)return no('не удалось проверить AutoMod: '+am.err,'проверка Twitch (AutoMod) недоступна, попробуй позже');
       if(am.blocked)return no('AutoMod Twitch не пропускает: '+am.blocked,'фильтр Twitch (AutoMod) не пропускает '+am.blocked);
+      if(speechReason&&C.speech_unchecked!=='allow')return no('не удалось проверить речь — '+speechReason,'не удалось проверить речь в этом видео');
     }
-    return{ok:true,cut:cutMode?lim:0,title};
+    return{ok:true,cut:cutMode?lim:0,title,...(speechReason?{speechUnchecked:true,speechReason}:{})};
   }
   async function order(id,user,own,x){
     x=x||{};
@@ -1727,6 +1796,7 @@ if(view&&ME){
     if(a.ok&&!own&&banned(e))a=no('зритель заблокирован','заказы для тебя на этом канале закрыты');
     if(!a.ok){e.s='rejected';e.r=a.r;saveDB();renderHist();log('Отклонено, '+user+': '+a.r);decline(e,a.m);return}
     if(!own&&!C.b_on&&C.bans.some(b=>b.id===id))log('Видео в бан-листе, но галочка «Банлист» выключена');
+    if(a.speechUnchecked){e.speechUnchecked=true;e.speechReason=a.speechReason}
     e.s='queued';e.qa=Date.now();if(!e.t)e.t=TT[id]||'';saveDB();renderHist();ttl(id);
     send({t:'add',id,u:user,k:e.k,cut:a.cut,front:!!x.front});log('Заказ: '+user+(own?' (стример)':'')+(e.src==='chat'?' (!!play)':'')+': '+id+(a.cut?' · до '+fmt(a.cut):''));
     if(e.src==='chat'&&!own){const n=ql.filter(x=>!x.pl).length+(now.id?1:0);
