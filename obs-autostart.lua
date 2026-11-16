@@ -116,6 +116,13 @@ end
 local function overlay(src) -- браузерный источник, кроме самого плеера
   return obs.obs_source_get_unversioned_id(src) == "browser_source" and not (setting(src, "url") or ""):find("redeem-player.html", 1, true)
 end
+local function player_role(url)
+  local query = url:match("^https?://[^/?#]+/redeem%-player%.html%?([^#]*)")
+  if not query then return nil end
+  local args = "&" .. query .. "&"
+  if not args:find("&view=player&", 1, true) then return nil end
+  return args:find("&role=me&", 1, true) and "me" or "viewers"
+end
 local function capture_source(src, id)
   if id == "wasapi_process_output_capture" then return true end
   if math.floor(obs.obs_source_get_output_flags(src) / obs.OBS_SOURCE_AUDIO) % 2 ~= 1 then return false end
@@ -222,6 +229,7 @@ local function al_release(src)
 end
 local function al_scan()
   local names, others, desk, me, meActive = {}, {}, "", false, false
+  local viewers = {}
   each(function(s, id)
     if id == "wasapi_output_capture" then
       if desk == "" and obs.obs_source_active(s) and not obs.obs_source_muted(s) and obs.obs_source_get_volume(s) > 0.001 then
@@ -235,15 +243,27 @@ local function al_scan()
     else
       if priv(s, "bz_al", "str") ~= "" then al_release(s) end
       if id == "browser_source" then
-        local url = setting(s, "url") or ""
-        if url:find("redeem-player.html", 1, true) and
-          (url:find("[?&]role=me$") or url:find("[?&]role=me[&#]")) then
+        local role = player_role(setting(s, "url") or "")
+        if role == "me" then
           me = true
           meActive = meActive or obs.obs_source_active(s)
+        elseif role == "viewers" and (not setting(s, "reroute_audio", "bool") or
+          obs.obs_source_get_monitoring_type(s) ~= obs.OBS_MONITORING_TYPE_NONE) then
+          viewers[#viewers + 1] = obs.obs_source_get_name(s)
         end
       end
     end
   end)
+  if me then
+    for _, name in ipairs(viewers) do
+      local s = obs.obs_get_source_by_name(name)
+      if s then
+        obs.obs_source_set_monitoring_type(s, obs.OBS_MONITORING_TYPE_NONE)
+        if not setting(s, "reroute_audio", "bool") then reroute(s, true) end
+        obs.obs_source_release(s)
+      end
+    end
+  end
   table.sort(names); table.sort(others)
   al.names, al.others, al.desk, al.me, al.meActive = names, others, desk, me, meActive
 end

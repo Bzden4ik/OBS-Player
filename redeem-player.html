@@ -422,7 +422,7 @@ body.stg{overflow:auto;font-size:13.5px}
           <label class="lim"><input type="checkbox" class="tg" id="w_tw"><span class="sw sm"></span>запрещённые слова канала на Twitch</label>
           <label class="lim"><input type="checkbox" class="tg" id="w_mat"><span class="sw sm"></span>мат (Twitch его не запрещает)</label>
           <label class="lim"><input type="checkbox" class="tg" id="speech_on"><span class="sw sm"></span>Речь в видео по субтитрам YouTube</label>
-          <div id="speech_opts">
+          <div id="speech_opts" hidden>
             <div class="hint" id="speech_label">Если речь проверить не удалось</div>
             <div class="seg" role="group" aria-labelledby="speech_label">
               <button type="button" data-v="reject" aria-pressed="true">Отклонять</button>
@@ -566,9 +566,12 @@ function dbDraw(){
 addEventListener('error',e=>dbg('ОШИБКА JS',e.message+' (строка '+e.lineno+')'));
 addEventListener('unhandledrejection',e=>dbg('ОШИБКА promise',String(e.reason)));
 const KEY='ytq-cfg',LIKES='❤ Лайки';
-const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:true,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
+const C={cid:'',tok:'',flt:'',vol:50,volMe:50,auto:false,yk:'',v_on:false,v_n:1000,l_on:false,l_n:100,d_on:false,d_n:5,d_mode:'cut',b_on:false,bans:[],likePl:LIKES,w_on:true,w_hate:true,w_mat:false,w_tw:true,w_am:false,speech_on:false,w_my:'',q_on:true,chat_on:true,sc:'',pl_pct:80,ord_auto:true,audio:false,hist_wk:true,hist_t:0,mus_on:true,pv:true};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
-C.speech_on=C.speech_on!==false;
+const filterDefaultsChanged=C.optInFilters!==true;
+C.speech_on=!filterDefaultsChanged&&C.speech_on===true;
+C.w_am=!filterDefaultsChanged&&C.w_am===true;
+C.optInFilters=true;
 C.speech_unchecked=C.speech_unchecked==='allow'?'allow':'reject';
 if(!C.cid)C.cid='xb00lx9x4wx1rx5kpm18klzuo243gh';
 const saveC=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
@@ -582,6 +585,8 @@ function yid(s){s=(s||'').trim();const m=s.match(/(?:youtu\.be\/|youtube(?:-noco
 const VID=/^[\w-]{11}$/;
 const SETV=new URLSearchParams(location.search).get('view')==='settings';
 const PANEL=!view&&!SETV;
+const ME=new URLSearchParams(location.search).get('role')==='me';
+if(PANEL&&filterDefaultsChanged)saveC();
 const P={
   note:'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
   clock:'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2',
@@ -617,14 +622,43 @@ const P={
 };
 const ico=(n,f)=>'<svg viewBox="0 0 24 24" fill="'+(f?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[n]+'"/></svg>';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let pollLast=null;
+const volumePercent=v=>Math.max(0,Math.min(100,Number(v)||0));
+let volumePending=PANEL,volumePosting=false;
+async function flushPlayerVolume(){
+  if(!volumePending||volumePosting)return;
+  volumePending=false;
+  volumePosting=true;
+  try{
+    const r=await fetch('/player-volume',{method:'POST',headers:{'X-Radio':'1'},signal:AbortSignal.timeout(2500),
+      body:JSON.stringify({vol:volumePercent(C.vol),volMe:volumePercent(C.volMe)})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+  }catch(e){
+    volumePending=true;
+    dbg('громкость','сервер не принял настройку: '+e.message);
+    return;
+  }finally{volumePosting=false}
+  if(volumePending)flushPlayerVolume();
+}
+let pollLast=null,volumeStream=null,volumePushes=0,appliedVolume=null;
+function receivePlayerVolume(state){
+  const t=ME?'volMe':'vol',v=state?.[t];
+  if(typeof v==='number'&&v!==appliedVolume){appliedVolume=v;onmsg({t,v})}
+}
+if(view&&typeof EventSource==='function'){
+  volumeStream=new EventSource('/player-volume');
+  volumeStream.onmessage=e=>{volumePushes++;receivePlayerVolume(JSON.parse(e.data))};
+}
+if(PANEL)flushPlayerVolume();
 async function poll(){
+  const volumePushesAtStart=volumePushes;
   try{
     const r=await fetch('/poll?'+(pollLast===null?'':'after='+pollLast)+(PANEL?'&p=1':''),{cache:'no-store'});
     if(r.status===404)throw new Error('404: на сервере старый server.js, перезапусти его');
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();pollLast=j.last;
     dbg('связь с сервером','ок (опрос раз в 0.5 с)');
+    if(view&&volumeStream?.readyState!==1&&volumePushes===volumePushesAtStart)receivePlayerVolume(j.volume);
+    if(PANEL){if(j.volume===null&&!volumePosting)volumePending=true;flushPlayerVolume()}
     j.msgs.forEach(m=>recv(m));
   }catch(e){dbg('связь с сервером','ОШИБКА: '+e.message+' | страница: '+location.origin)}
   setTimeout(poll,view&&!ME?500:document.hidden?2000:1000);
@@ -641,16 +675,19 @@ function loadYT(){
     setTimeout(()=>{if(!(window.YT&&YT.Player)){dbg('YT API','не загрузился, повтор #'+(++n));s.remove();go()}},20000);
   })();
 }
-const ME=new URLSearchParams(location.search).get('role')==='me';
 if(view&&ME){
   document.body.className='g';$('panel').style.display='none';
   $('box').style.width='480px';$('box').style.height='270px';
   dbg('Режим','плеер для стримера (без видео)');
-  let yt=null,ready=false,cur=null,ck=null,vm=+C.volMe,lastState=null,lastStateAt=0;
+  let yt=null,ready=false,cur=null,ck=null,vm=null,lastState=null,lastStateAt=0;
   let sourceActive=null,sourceVisible=null,sceneMe=null,sceneUpdate=0;
-  if(!(vm>=0&&vm<=100))vm=50;
   const ID=/^[\w-]{11}$/;
   const canHear=()=>sourceActive!==false&&sourceVisible!==false&&sceneMe!==false&&!document.hidden;
+  function applyPersonalVolume(){
+    if(vm===0)yt.mute();
+    yt.setVolume(vm);
+    if(vm>0)yt.unMute();
+  }
   function syncPersonal(){
     if(!ready)return;
     if(!canHear()){
@@ -658,7 +695,8 @@ if(view&&ME){
       if(cur){yt.stopVideo();cur=null;ck=null}
       return;
     }
-    if(!lastState||Date.now()-lastStateAt>7000)return;
+    if(vm===null||!lastState||Date.now()-lastStateAt>7000)return;
+    applyPersonalVolume();
     const m=lastState;
     if(m.cur!==cur||m.ck!==ck){
       cur=ID.test(m.cur||'')?m.cur:null;ck=m.ck;
@@ -673,7 +711,6 @@ if(view&&ME){
       if(m.pa&&(ps===1||ps===3))yt.pauseVideo();
       else if(!m.pa&&(ps===2||ps===5))yt.playVideo();
     }
-    yt.setVolume(vm);yt.unMute();
   }
   const personalSync=()=>{try{syncPersonal()}catch(e){}};
   addEventListener('obsSourceActiveChanged',e=>{if(typeof e.detail?.active==='boolean'){sourceActive=e.detail.active;personalSync()}});
@@ -683,11 +720,16 @@ if(view&&ME){
   fetch('/obs/alerts',{cache:'no-store'}).then(r=>r.json()).then(m=>{if(!sceneUpdate)observeScene(m)}).catch(()=>{});
   window.onYouTubeIframeAPIReady=()=>{if(yt)return;yt=new YT.Player('yt',{width:'100%',height:'100%',
     playerVars:{autoplay:0,controls:0,rel:0,playsinline:1,origin:location.origin},
-    events:{onReady:()=>{ready=true;dbg('Плеер','готов');personalSync()},onError:e=>dbg('ОШИБКА YouTube',e.data)}})};
+    events:{onReady:()=>{ready=true;yt.mute();dbg('Плеер','готов');personalSync()},onError:e=>dbg('ОШИБКА YouTube',e.data)}})};
   loadYT();
   onmsg=m=>{
     if(m.t==='al'){sceneUpdate++;observeScene(m)}
-    else if(m.t==='volMe'){vm=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',vm+'%');if(ready&&canHear())yt.setVolume(vm)}
+    else if(m.t==='volMe'){
+      const first=vm===null;
+      vm=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',vm+'%');
+      if(first)personalSync();
+      else if(ready&&canHear())applyPersonalVolume();
+    }
     else if(m.t==='st'){lastState=m;lastStateAt=Date.now();personalSync()}
   };
 }else if(view){
@@ -695,6 +737,11 @@ if(view&&ME){
   dbg('JS','работает');dbg('URL',location.href);dbg('BroadcastChannel',ch?'есть':'нет');dbg('YT API','загружается…');
   let yt=null,ready=false,q=[],cur=null,paused=false,ap=null,pn=0;
   const box=$('box');
+  function applyViewerVolume(){
+    if(C.vol===0)yt.mute();
+    yt.setVolume(C.vol);
+    if(C.vol>0)yt.unMute();
+  }
   let ao=false;const aoSet=v=>{ao=!!v;box.classList.toggle('ao',ao)};aoSet(C.audio);
   const st=()=>{box.classList.toggle('pz',!!(paused&&cur));let title='',tm=0,du=0;try{if(cur&&ready){title=(yt.getVideoData()||{}).title||'';tm=Math.floor(yt.getCurrentTime()||0);du=Math.floor(yt.getDuration()||0)}}catch(e){}
     send({t:'st',yt:ready?1:0,pa:paused?1:0,ao:ao?1:0,cur:cur?cur.id:null,ck:cur?cur.k:null,q:q.length,
@@ -713,7 +760,7 @@ if(view&&ME){
   function next(){
     if(!ready)return;
     cur=pick();paused=false;
-    if(cur){box.style.visibility='visible';yt.loadVideoById(cur.id);yt.setVolume(C.vol)}
+    if(cur){box.style.visibility='visible';applyViewerVolume();yt.loadVideoById(cur.id)}
     else{box.style.visibility='hidden';try{yt.stopVideo()}catch(e){}}
     st();
   }
@@ -733,7 +780,7 @@ if(view&&ME){
     else if(m.t==='addm'){(Array.isArray(m.items)?m.items:[]).slice(0,200).forEach(x=>{if(x&&ID.test(x.id))q.push(x)});if(!cur)next();else st()}
     else if(m.t==='skip')next();
     else if(m.t==='rm'){const i=q.findIndex(x=>x.k===m.k);if(i>=0){q.splice(i,1);st()}else if(cur&&cur.k===m.k)next()}
-    else if(m.t==='vol'){C.vol=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',C.vol+'%');if(ready)yt.setVolume(C.vol)}
+    else if(m.t==='vol'){C.vol=Math.max(0,Math.min(100,+m.v||0));dbg('громкость',C.vol+'%');if(ready)applyViewerVolume()}
     else if(m.t==='pause'){if(ready&&cur){paused=true;try{yt.pauseVideo()}catch(e){}st()}}
     else if(m.t==='resume'){if(ready&&cur){paused=false;try{yt.playVideo()}catch(e){}st()}}
     else if(m.t==='seek'){if(ready&&cur){try{yt.seekTo(Math.max(0,+m.s||0),true)}catch(e){}setTimeout(st,400)}}
@@ -744,7 +791,7 @@ if(view&&ME){
     dbg('YT API','загружен');
     yt=new YT.Player('yt',{width:'100%',height:'100%',
       playerVars:{autoplay:1,controls:0,rel:0,playsinline:1,origin:location.origin},
-      events:{onReady:()=>{ready=true;dbg('Плеер','готов');yt.setVolume(C.vol);next()},
+      events:{onReady:()=>{ready=true;dbg('Плеер','готов');applyViewerVolume();next()},
         onStateChange:e=>{dbg('состояние плеера',e.data+' (1=играет, 2=пауза, 3=буфер, 0=конец, -1=не начато)');
           if(e.data===1&&cur){cur.started=true;paused=false;st()}
           if(e.data===2&&cur&&!paused){paused=true;st()}
@@ -1377,7 +1424,8 @@ if(view&&ME){
     const cl=v=>Math.max(0,Math.min(100,Math.round(+v||0))),get=()=>cl(io.get()),reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
     let prev=get()||50,tq=0,tl=0,acc=0,hov=0;
     const keep=()=>{if(get()>0)prev=get()};
-    const flush=()=>{tq=0;tl=Date.now();io.send(get())};
+    const flush=()=>{clearTimeout(tq);tq=0;tl=Date.now();io.send(get())};
+    const sendDelay=io.live?16:90;
     function paint(){
       const v=get();sl.style.setProperty('--v',Math.sqrt(v/100).toFixed(4));
       sl.setAttribute('aria-valuenow',v);sl.setAttribute('aria-valuetext',v+'%');
@@ -1388,12 +1436,15 @@ if(view&&ME){
     function put(v,soft){
       v=cl(v);if(v===get())return;io.set(v);paint();
       if(!soft&&!reduce)inp.animate([{transform:'scale(1.15)'},{transform:'none'}],{duration:160,easing:'ease-out'});
-      if(!tq){const w=90-(Date.now()-tl);if(w<=0)flush();else tq=setTimeout(flush,w)}
+      if(io.live&&v===0)flush();
+      else if(!tq){const w=sendDelay-(Date.now()-tl);if(w<=0)flush();else tq=setTimeout(flush,w)}
     }
     const fromX=x=>{const r=sl.getBoundingClientRect(),p=Math.max(0,Math.min(1,(x-r.left)/r.width));return 100*p*p};
     sl.onpointerdown=e=>{e.preventDefault();sl.focus();sl.setPointerCapture(e.pointerId);sl.classList.add('dr');put(fromX(e.clientX),1)};
     sl.onpointermove=e=>{if(sl.classList.contains('dr'))put(fromX(e.clientX),1)};
-    sl.onpointerup=sl.onpointercancel=()=>{sl.classList.remove('dr');keep();paint()};
+    const finishDrag=()=>{if(tq)flush();sl.classList.remove('dr');keep();paint()};
+    sl.onpointerup=e=>{if(sl.classList.contains('dr'))put(fromX(e.clientX),1);finishDrag()};
+    sl.onpointercancel=finishDrag;
     sl.onpointerenter=()=>{hov=Date.now()};
     sl.onkeydown=e=>{const d={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1,PageDown:-10,PageUp:10}[e.key];
       if(e.key==='Home')put(0);else if(e.key==='End')put(100);else if(d)put(get()+d*(e.shiftKey&&Math.abs(d)===1?5:1));else return;
@@ -1409,13 +1460,15 @@ if(view&&ME){
     inp.oninput=()=>{inp.value=inp.value.replace(/\D/g,'').slice(0,3);if(inp.value!==''){put(inp.value,1);keep()}};
     inp.onkeydown=e=>{if(e.key==='Enter'){inp.blur();return}const d=e.key==='ArrowUp'?1:e.key==='ArrowDown'?-1:0;
       if(d){e.preventDefault();put(get()+d*(e.shiftKey?5:1));inp.value=get()}};
-    inp.onblur=()=>{keep();paint()};
+    inp.onblur=()=>{if(tq)flush();keep();paint()};
     paint();
     return{set:v=>{put(v);keep()},paint,busy:()=>!!tq||sl.classList.contains('dr')||document.activeElement===inp||Date.now()-tl<1500};
   }
-  const cfgVol=(key,msg)=>({get:()=>C[key],set:v=>{C[key]=v},send:v=>{saveC();send({t:msg,v})}});
-  const volV=volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители',cfgVol('vol','vol'));
-  volCtl($('vc2'),'Мне','Громкость копии плеера только для тебя (источник с role=me)',cfgVol('volMe','volMe'));
+  const cfgVol=key=>({live:true,get:()=>C[key],set:v=>{C[key]=v},send:()=>{
+    saveC();volumePending=true;flushPlayerVolume();
+  }});
+  const volV=volCtl($('vc1'),'Зрители','Громкость плеера на стриме — её слышат зрители',cfgVol('vol'));
+  volCtl($('vc2'),'Мне','Громкость копии плеера только для тебя (источник с role=me)',cfgVol('volMe'));
   let AL={};
   function alOp(o){fetch('/obs/alerts',{method:'POST',headers:{'X-Radio':'1'},body:JSON.stringify(o)}).catch(()=>{})}
   const alIO=(o,op,n,tip)=>({get:()=>o.v,set:v=>{o.v=v;o.at=Date.now()},send:v=>alOp({op,n,v:v/100}),muted:()=>o.mu,
@@ -1763,7 +1816,7 @@ if(view&&ME){
           'в видео есть слова, '+(w.cat==='hate'?'запрещённые на Twitch':'запрещённые на канале')+' ('+p.src+')'):null;
       };
       for(const part of parts){const denied=rejectWord(part);if(denied)return denied}
-      if(C.speech_on!==false){
+      if(C.speech_on){
         try{
           const result=await yget('/yt/speech?id='+id);
           const matching=result?.videoId===id&&result.kind==='asr';

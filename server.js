@@ -1,5 +1,5 @@
 const http=require('http'),https=require('https'),fs=require('fs'),path=require('path'),os=require('os'),net=require('net'),tls=require('tls'),zlib=require('zlib'),crypto=require('crypto'),{spawn,spawnSync,execFile,execFileSync}=require('child_process');
-const APP={name:'Bzden4ik Player',version:'1.2.5',repo:'Bzden4ik/OBS-Player'};
+const APP={name:'Bzden4ik Player',version:'1.2.6',repo:'Bzden4ik/OBS-Player'};
 const VER=crypto.createHash('sha1').update(fs.readFileSync(__filename)).digest('hex').slice(0,10);
 const PORT=+process.env.PORT||8000,FILE=path.join(__dirname,'redeem-player.html');
 const DATA=path.join(__dirname,'data.json'),BAK=path.join(__dirname,'data.backup.json');
@@ -211,6 +211,17 @@ const body=(req,max,cb)=>{let b='';req.on('data',d=>{b+=d;if(b.length>max)req.de
 const OPEN_OK=/^https:\/\/(t\.me\/vtuberstand|github\.com\/Bzden4ik\/OBS-Player)([\/?#][^\s"<>]*)?$/;
 const bus=m=>{m.n='s'+(++seq)+'-'+Date.now();log.push({id:seq,m});if(log.length>300)log.shift()};
 let panelSeen=0;
+let playerVolume=null;
+const volumeListeners=new Set();
+const volumePercent=v=>Math.max(0,Math.min(100,v));
+function writePlayerVolume(res){
+  if(!res.writableNeedDrain)res.write('data: '+JSON.stringify(playerVolume)+'\n\n');
+}
+function setPlayerVolume(next){
+  if(playerVolume?.vol===next.vol&&playerVolume?.volMe===next.volMe)return;
+  playerVolume=next;
+  for(const res of volumeListeners)writePlayerVolume(res);
+}
 const AL_F=path.join(__dirname,'obs-alerts.json'),AL_CMD=path.join(__dirname,'obs-alerts-cmd.txt');
 const AL_OPS=['M','mute','v','mu','drop','add','collect','revert','desk'];
 let AL={},alOps=[],alId=0;
@@ -581,12 +592,36 @@ const srv=http.createServer((req,res)=>{
     const from=a===null?seq:(+a>seq?0:+a);
     const msgs=log.filter(x=>x.id>from).map(x=>x.m);
     head(res,200,{'Content-Type':'application/json','Cache-Control':'no-store'});
-    res.end(JSON.stringify({last:seq,msgs}));return;
+    res.end(JSON.stringify({last:seq,msgs,volume:playerVolume}));return;
+  }
+  if(u.pathname==='/player-volume'){
+    if(req.method==='GET'){
+      head(res,200,{'Content-Type':'text/event-stream','Cache-Control':'no-store'});
+      volumeListeners.add(res);
+      res.on('close',()=>volumeListeners.delete(res));
+      res.on('drain',()=>writePlayerVolume(res));
+      writePlayerVolume(res);
+    }else if(req.method==='POST'){
+      body(req,256,j=>{
+        if(!j||!Number.isFinite(j.vol)||!Number.isFinite(j.volMe)){head(res,400);res.end();return}
+        setPlayerVolume({vol:volumePercent(j.vol),volMe:volumePercent(j.volMe)});
+        head(res,204);res.end();
+      });
+    }else{head(res,405);res.end()}
+    return;
   }
   if(u.pathname==='/send'&&req.method==='POST'){
     let b='';
     req.on('data',d=>{b+=d;if(b.length>3e5)req.destroy()});
-    req.on('end',()=>{try{const m=JSON.parse(b);log.push({id:++seq,m});if(log.length>300)log.shift();playSeen(m)}catch(e){}head(res,204);res.end()});
+    req.on('end',()=>{
+      try{
+        const m=JSON.parse(b);
+        if(m.t==='vol'||m.t==='volMe'){
+          if(Number.isFinite(m.v))setPlayerVolume({vol:playerVolume?.vol??null,volMe:playerVolume?.volMe??null,[m.t]:volumePercent(m.v)});
+        }else{log.push({id:++seq,m});if(log.length>300)log.shift();playSeen(m)}
+      }catch(e){}
+      head(res,204);res.end();
+    });
     return;
   }
   if(page){
